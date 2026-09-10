@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; margin: 0; width: 320px; color: #111; }
+    header { background: #16a34a; color: #fff; padding: 14px 16px; }
+    header h1 { font-size: 15px; margin: 0; }
+    header p { font-size: 11px; margin: 4px 0 0; opacity: .9; }
+    #poules { padding: 12px 14px; }
+    .empty { font-size: 13px; color: #555; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .row:last-child { border-bottom: none; }
+    .row b { font-size: 13px; display: block; }
+    .row .sub { font-size: 11px; color: #777; }
+    .row button { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+    .row button:hover { background: #15803d; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚽ Voetbal Poule Dashboard</h1>
+    <p>Ga naar een team/poule op voetbal.nl en klik op de groene knop.</p>
+  </header>
+  <div id="poules"><p class="empty">Laden…</p></div>
+  <script src="popup.js"></script>
+</body>
+</html>

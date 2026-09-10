@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Voetbal.nl Poule Dashboard",
+  "version": "0.1.0",
+  "description": "Maak van elke KNVB-jeugdpoule een statistisch dashboard met voorspellingen en onderlinge vergelijkingen.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://www.voetbal.nl/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Voetbal Poule Dashboard"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.voetbal.nl/team/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
