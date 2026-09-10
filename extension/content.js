@@ -141,6 +141,31 @@
     return comps;
   }
 
+  // Cache only for this page lifetime; reloading picks up competition changes.
+  let cachedCompetitions = null;
+  let competitionsRequest = null;
+  async function loadCompetitions() {
+    const visible = parseCompetitions();
+    if (visible.length) {
+      cachedCompetitions = visible;
+      return visible;
+    }
+    if (cachedCompetitions) return cachedCompetitions;
+    if (!competitionsRequest) {
+      competitionsRequest = (async () => {
+        try {
+          const html = await fetchHTML('/team/' + OUR_TEAM_ID + '/stand');
+          const comps = parseCompetitions(new DOMParser().parseFromString(html, 'text/html'));
+          if (comps.length) cachedCompetitions = comps;
+          return comps;
+        } finally {
+          competitionsRequest = null;
+        }
+      })();
+    }
+    return competitionsRequest;
+  }
+
   /** Bouw het poule-object op voor een gekozen competitie. */
   async function gatherPoule(competitionSlug = '', competitionLabel = '') {
     const suffix = competitionSlug ? '/' + competitionSlug : '';
@@ -216,12 +241,18 @@
   }
 
   let button;
+  let enabled = false;
+  let settingsLoaded = false;
+  let settingsRevision = 0;
   async function startGather(slug, label) {
+    if (!enabled) return;
+    const revision = settingsRevision;
     const old = button.textContent;
     button.textContent = '⏳ Poule ophalen…';
     button.disabled = true;
     try {
       const poule = await gatherPoule(slug, label);
+      if (!enabled || revision !== settingsRevision) return;
       const saved = await new Promise((resolve, reject) => {
         chrome.runtime.sendMessage({ type: 'save-poule', poule }, (response) => {
           const error = chrome.runtime.lastError?.message || response?.error;
@@ -229,20 +260,39 @@
           else resolve(response);
         });
       });
+      if (!enabled || revision !== settingsRevision) return;
       chrome.runtime.sendMessage({ type: 'open-dashboard', pouleId: saved.pouleId });
       button.textContent = old;
       button.disabled = false;
     } catch (e) {
+      if (!enabled || revision !== settingsRevision) return;
       button.textContent = '❌ ' + (e && e.message ? e.message : 'Er ging iets mis');
-      setTimeout(() => { button.textContent = old; button.disabled = false; }, 3500);
+      setTimeout(() => { if (revision === settingsRevision) { button.textContent = old; button.disabled = false; } }, 3500);
     }
   }
 
+  let closeCompetitionMenu = null;
   function showMenu(comps) {
-    const existing = document.getElementById('vnd-poule-menu');
-    if (existing) existing.remove();
+    if (!enabled) return;
+    if (closeCompetitionMenu) closeCompetitionMenu();
     const menu = document.createElement('div');
     menu.id = 'vnd-poule-menu';
+    const close = () => {
+      menu.remove();
+      document.removeEventListener('click', onOutsideClick, true);
+      document.removeEventListener('keydown', onKeyDown, true);
+      closeCompetitionMenu = null;
+    };
+    const onOutsideClick = (event) => {
+      if (!menu.contains(event.target) && !button.contains(event.target)) close();
+    };
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        close();
+        button.focus();
+      }
+    };
+    closeCompetitionMenu = close;
     menu.style.cssText =
       'position:fixed;bottom:76px;right:22px;z-index:2147483647;background:#fff;border:1px solid #e4e4e7;' +
       'border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:190px;font-family:-apple-system,sans-serif;';
@@ -252,13 +302,12 @@
       item.style.cssText = 'display:block;width:100%;text-align:left;background:none;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;color:#111;';
       item.onmouseover = () => (item.style.background = '#f0fdf4');
       item.onmouseout = () => (item.style.background = 'none');
-      item.onclick = () => { menu.remove(); startGather(c.slug, c.label); };
+      item.onclick = () => { close(); startGather(c.slug, c.label); };
       menu.appendChild(item);
     });
     document.body.appendChild(menu);
-    setTimeout(() => {
-      if (document.body.contains(menu)) menu.remove();
-    }, 8000);
+    document.addEventListener('click', onOutsideClick, true);
+    document.addEventListener('keydown', onKeyDown, true);
   }
 
   function ensureButton() {
@@ -271,25 +320,53 @@
       'border:none;border-radius:999px;padding:12px 18px;font-size:14px;font-weight:600;' +
       'box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer;font-family:-apple-system,sans-serif;';
     button.onclick = async () => {
-      let comps = parseCompetitions();
-      if (comps.length === 0) {
-        // Competitie-selects zitten in de tab-pagina's; haal ze op via de stand-pagina.
-        try {
-          const html = await fetchHTML('/team/' + OUR_TEAM_ID + '/stand');
-          comps = parseCompetitions(new DOMParser().parseFromString(html, 'text/html'));
-        } catch (e) {
-          /* geef het gewoon op, dan wordt de standaard-competitie gebruikt */
-        }
+      if (!enabled || button.disabled) return;
+      const revision = settingsRevision;
+      if (closeCompetitionMenu) { closeCompetitionMenu(); return; }
+      button.disabled = true;
+      button.textContent = '⏳ Competities laden…';
+      let comps;
+      try {
+        comps = await loadCompetitions();
+        if (!enabled || revision !== settingsRevision) return;
+      } catch (e) {
+        if (!enabled || revision !== settingsRevision) return;
+        button.textContent = '❌ Laden mislukt · probeer opnieuw';
+        button.disabled = false;
+        return;
       }
+      button.textContent = '📊 Maak poule-dashboard';
+      button.disabled = false;
       if (comps.length <= 1) startGather(comps[0]?.slug ?? '', comps[0]?.label ?? '');
       else showMenu(comps);
     };
     document.body.appendChild(button);
+    // Share this request with an early click instead of fetching the page twice.
+    void loadCompetitions().catch(() => {});
   }
 
   function inject() {
-    ensureButton();
+    if (settingsLoaded && enabled) ensureButton();
   }
+
+  function applyEnabled(value) {
+    settingsLoaded = true;
+    enabled = value !== false;
+    settingsRevision++;
+    if (!enabled) {
+      if (closeCompetitionMenu) closeCompetitionMenu();
+      if (button) button.remove();
+    } else {
+      inject();
+    }
+  }
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.dashboardEnabled) applyEnabled(changes.dashboardEnabled.newValue);
+  });
+  const initialRevision = settingsRevision;
+  chrome.storage.local.get('dashboardEnabled', (data) => {
+    if (!chrome.runtime.lastError && settingsRevision === initialRevision) applyEnabled(data.dashboardEnabled);
+  });
 
   if (document.readyState === 'complete') inject();
   else window.addEventListener('load', inject);

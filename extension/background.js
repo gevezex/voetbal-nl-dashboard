@@ -2,7 +2,7 @@ importScripts('poule-storage.js');
 
 // Serialize read/modify/write operations, including simultaneous imports from tabs.
 let storageQueue = Promise.resolve();
-function updatePoules(incoming) {
+function updatePoules(incoming, clear = false) {
   const operation = storageQueue.then(async () => {
     const stored = await new Promise((resolve, reject) => {
       chrome.storage.local.get(['poules', 'pouleAliases'], (data) => {
@@ -10,7 +10,7 @@ function updatePoules(incoming) {
         else resolve(data);
       });
     });
-    const result = PouleStorage.merge(stored, incoming);
+    const result = clear ? { poules: {}, pouleAliases: {} } : PouleStorage.merge(stored, incoming);
     const next = { poules: result.poules, pouleAliases: result.pouleAliases };
     if (JSON.stringify(next) !== JSON.stringify({ poules: stored.poules || {}, pouleAliases: stored.pouleAliases || {} })) {
       await new Promise((resolve, reject) => {
@@ -31,8 +31,8 @@ function updatePoules(incoming) {
  */
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg) return false;
-  if (msg.type === 'get-poules' || msg.type === 'save-poule') {
-    updatePoules(msg.type === 'save-poule' ? msg.poule : undefined)
+  if (msg.type === 'get-poules' || msg.type === 'save-poule' || msg.type === 'clear-poules') {
+    updatePoules(msg.type === 'save-poule' ? msg.poule : undefined, msg.type === 'clear-poules')
       .then(sendResponse, (error) => sendResponse({ error: error.message }));
     return true;
   }

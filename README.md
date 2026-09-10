@@ -71,6 +71,9 @@ Daarna in **Chrome**:
    **stand / programma / uitslagen** en (voor elke club in de poule) de **Team**-tab voor de
    selectie, slaat alles lokaal op en opent het **dashboard** in een nieuw tabblad.
 4. Via het **extensie-icoon** (popup) zie je opgeslagen poules en kun je ze opnieuw openen.
+   Met **Knop op voetbal.nl** zet je de zwevende knop aan of uit. Deze instelling blijft bewaard,
+   ook na het herstarten van Chrome. **Alles verwijderen** wist alle lokaal opgeslagen dashboards.
+   Opnieuw ophalen werkt de bestaande poule bij; team, competitie en seizoen blijven apart.
 
 > 💡 Alle data blijft lokaal in `chrome.storage`; je sessie wordt nooit gedeeld. Alleen **Chrome
 > (MV3)**.

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Voetbal Poule Dashboard",
-  "version": "0.9.1",
+  "version": "1.0.0",
   "description": "Maak van elke KNVB-jeugdpoule een statistisch dashboard met voorspellingen en onderlinge vergelijkingen.",
   "permissions": ["storage"],
   "host_permissions": ["https://www.voetbal.nl/*"],

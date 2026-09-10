@@ -42,7 +42,7 @@ test('legacy timestamp fallback and incomplete records preserve data', () => {
 });
 
 test('worker serializes concurrent saves and reads', async () => {
-  let stored = {};
+  let stored = { dashboardEnabled: false };
   let handler;
   const context = vm.createContext({
     importScripts() {},
@@ -50,7 +50,7 @@ test('worker serializes concurrent saves and reads', async () => {
       runtime: { onMessage: { addListener(fn) { handler = fn; } } },
       storage: { local: {
         get(keys, callback) { setTimeout(() => callback(structuredClone(stored)), 5); },
-        set(value, callback) { setTimeout(() => { stored = structuredClone(value); callback(); }, 5); },
+        set(value, callback) { setTimeout(() => { stored = { ...stored, ...structuredClone(value) }; callback(); }, 5); },
       } },
     },
   });
@@ -64,4 +64,10 @@ test('worker serializes concurrent saves and reads', async () => {
   const result = await send({ type: 'get-poules' });
   assert.equal(Object.keys(result.poules).length, 2);
   assert.ok(Object.values(result.poules).some(p => p.matches[0] === 12));
+  const cleared = await send({ type: 'clear-poules' });
+  assert.equal(Object.keys(cleared.poules).length, 0);
+  assert.equal(Object.keys(stored.pouleAliases).length, 0);
+  assert.equal(stored.dashboardEnabled, false);
+  const reopened = await send({ type: 'get-poules' });
+  assert.equal(Object.keys(reopened.poules).length, 0);
 });

@@ -1,6 +1,6 @@
 {
   "name": "voetbal-nl-extension",
-  "version": "0.9.1",
+  "version": "1.0.0",
   "private": true,
   "description": "Chrome-extensie die van elke KNVB-jeugdpoule op voetbal.nl een statistisch analyse-dashboard maakt.",
   "scripts": {
