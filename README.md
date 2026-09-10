@@ -32,17 +32,37 @@ De header heeft **vijf views** (tabbladen):
   naast de bestaande radar, doelsaldo-over-tijd en **vergelijking per tegenstander** met een
   gestapelde winst/gelijk/verlies-balk per tegenstander.
 
-Daarnaast:
-
-- **Selectie (Staf & Spelers)** per team, met ronde foto's (hover voor een grotere weergave).
-  Afgeschermde namen worden overgeslagen.
-- **Club-logo** rechtsboven bij een geselecteerd team.
-- **Info-icoontjes (ⓘ)** bij elk blok openen een **uitgebreide infobox**: titel, tussenkopjes,
-  paragrafen en opsommingen in begrijpelijke taal voor trainers — niet alleen "wat het is", maar ook
-  "hoe lees je het" en "waarom is het nuttig".
-- **Terug-knop** ("← Overzicht") om vanuit een team terug naar de hele poule te gaan.
-
 ## 🚀 Installeren
+
+De extensie komt beschikbaar in de [Chrome Web Store](https://chromewebstore.google.com/).
+**De directe link naar Voetbal Poule Dashboard volgt zodra de extensie beschikbaar is.**
+
+Zodra de extensie beschikbaar is, installeer je deze als volgt:
+
+1. Open de pagina van **Voetbal Poule Dashboard** in de Chrome Web Store met Google Chrome op je computer.
+2. Klik op **Toevoegen aan Chrome**.
+3. Bekijk de gevraagde machtigingen en bevestig met **Extensie toevoegen**.
+4. Klik rechtsboven in Chrome op het **puzzelstukje** (Extensies) en pin **Voetbal Poule Dashboard**
+   met het speldje, zodat je het icoon altijd in de werkbalk ziet.
+5. Ga naar [voetbal.nl](https://www.voetbal.nl), log in en open een team/poule-pagina.
+   Klik rechtsonder op **Maak poule-dashboard** om te beginnen.
+
+## 🧑‍🏫 Gebruiken
+
+1. Ga op voetbal.nl (ingelogd) naar een **team/poule-pagina**.
+2. Rechtsonder verschijnt de knop **"📊 Maak poule-dashboard"**.
+3. Klik → kies de **competitie** (bijv. Beker of Competitie najaar). De extensie leest de tabs
+   **stand / programma / uitslagen** en (voor elke club in de poule) de **Team**-tab voor de
+   selectie, slaat alles lokaal op en opent het **dashboard** in een nieuw tabblad.
+4. Via het **extensie-icoon** (popup) zie je opgeslagen poules en kun je ze opnieuw openen.
+   Met **Knop op voetbal.nl** zet je de zwevende knop aan of uit. Deze instelling blijft bewaard,
+   ook na het herstarten van Chrome. **Alles verwijderen** wist alle lokaal opgeslagen dashboards.
+   Opnieuw ophalen werkt de bestaande poule bij; team, competitie en seizoen blijven apart.
+
+> 💡 Alle data blijft lokaal in `chrome.storage`; je sessie wordt nooit gedeeld. Alleen **Chrome
+> (MV3)**.
+
+## 🛠️ Installeren voor developers
 
 ```bash
 pnpm install
@@ -62,21 +82,6 @@ Daarna in **Chrome**:
 | `pnpm build:ext`  | De extensie-bundel (`extension/dashboard.js`) opnieuw genereren.    |
 | `pnpm typecheck`  | TypeScript-controle over `lib/` en `extension-src/`.                |
 | `pnpm bump`       | Interactief: versie bumpen, bouwen en de Web Store-zip klaarzetten. |
-
-## 🧑‍🏫 Gebruiken
-
-1. Ga op voetbal.nl (ingelogd) naar een **team/poule-pagina**.
-2. Rechtsonder verschijnt de knop **"📊 Maak poule-dashboard"**.
-3. Klik → kies de **competitie** (bijv. Beker of Competitie najaar). De extensie leest de tabs
-   **stand / programma / uitslagen** en (voor elke club in de poule) de **Team**-tab voor de
-   selectie, slaat alles lokaal op en opent het **dashboard** in een nieuw tabblad.
-4. Via het **extensie-icoon** (popup) zie je opgeslagen poules en kun je ze opnieuw openen.
-   Met **Knop op voetbal.nl** zet je de zwevende knop aan of uit. Deze instelling blijft bewaard,
-   ook na het herstarten van Chrome. **Alles verwijderen** wist alle lokaal opgeslagen dashboards.
-   Opnieuw ophalen werkt de bestaande poule bij; team, competitie en seizoen blijven apart.
-
-> 💡 Alle data blijft lokaal in `chrome.storage`; je sessie wordt nooit gedeeld. Alleen **Chrome
-> (MV3)**.
 
 ## 📊 Analyse-catalogus
 
