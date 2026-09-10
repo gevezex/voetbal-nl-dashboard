@@ -5,11 +5,11 @@ Vul deze velden in het tabblad **Store listing** in.
 | Veld | Waarde |
 | --- | --- |
 | Productnaam | `Voetbal Poule Dashboard` (komt uit `manifest.json`) |
-| Categorie | **Sport** (alternatief: **Productiviteit**) |
+| Categorie | **Nieuws en weer** (er is geen sportcategorie; **Productiviteit** is in het dashboard uitgeschakeld) |
 | Taal | **Nederlands** |
 | Homepage-URL | `https://github.com/gevezex/voetbal-nl-dashboard` |
 | Support-URL | `https://github.com/gevezex/voetbal-nl-dashboard/issues` |
-| Privacybeleid-URL | `https://gevezex.github.io/voetbal-nl-dashboard/privacy.html` |
+| Privacybeleid-URL | `https://github.com/gevezex/voetbal-nl-dashboard/blob/main/store/privacy-policy.md` |
 | YouTube-video | (optioneel, leeg laten) |
 | Zichtbaarheid | Openbaar (of **Unlisted** als je hem niet in zoeken wilt) |
 | Prijs | Gratis |
@@ -19,14 +19,15 @@ Vul deze velden in het tabblad **Store listing** in.
 Het beleid staat als bron in `store/privacy-policy.md` en als kant-en-klare
 pagina in `docs/privacy.html`.
 
-**Optie A — GitHub Pages (aanbevolen)**
+Op dit moment is ingevuld (werkt direct):
+`https://github.com/gevezex/voetbal-nl-dashboard/blob/main/store/privacy-policy.md`
+
+Wil je een schonere URL, zet dan GitHub Pages aan:
 1. Settings → Pages → Source: *Deploy from a branch*.
 2. Branch **main**, map **/docs** → Save.
 3. Na ~1 minuut staat het op
-   `https://gevezex.github.io/voetbal-nl-dashboard/privacy.html`.
-
-**Optie B — Markdown op GitHub** (werkt ook als URL):
-`https://github.com/gevezex/voetbal-nl-dashboard/blob/main/store/privacy-policy.md`
+   `https://gevezex.github.io/voetbal-nl-dashboard/privacy.html` en kun je dat
+   adres in het dashboard invullen.
 
 ## Trader-status (DSA)
 

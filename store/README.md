@@ -55,13 +55,17 @@ store/
 - [x] Geen remote code, geen `eval`, geen externe scripts (MV3-conform)
 
 ### Nog te doen (deels via het dashboard)
-- [ ] **Screenshots** maken (min. 1, het liefst 4–5 op 1280×800) — zie `listing/screenshots.md`
-- [ ] **Privacybeleid online zetten** en de URL noteren — zie `privacy-policy.md`
-- [ ] **GitHub Pages** aanzetten (Settings → Pages → main / `docs`) of het beleid elders hosten
+- [x] **Screenshots** gemaakt (5 × 1280×800) — in `store/screenshots/`
+- [x] **Privacybeleid online** (GitHub blob-URL) en ingevuld in het dashboard
+- [ ] **GitHub Pages** aanzetten voor een schonere URL (optioneel, zie hieronder)
 - [ ] **Trader-status (DSA)** verklaren in het dashboard (verplicht voor EU-distributie)
 - [ ] **2-stapsverificatie** op het Google-account aan hebben staan
-- [ ] ZIP uploaden, listing + privacy-tab invullen, indienen
+- [x] ZIP geüpload, listing + privacy + distributie ingevuld
+- [ ] **Ter beoordeling verzenden** (laatste stap, point of no return)
 - [ ] Na goedkeuring: versie bumpen (`manifest.json` + `package.json`) bij elke update
+
+> **Concept-item in het dashboard:** `abcobomhkkmchncifpbchjijgacejaeg`
+> (`Voetbal Poule Dashboard`, status *Concept*).
 
 ---
 
