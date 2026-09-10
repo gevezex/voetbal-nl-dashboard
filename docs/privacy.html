@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacybeleid — Voetbal Poule Dashboard</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #0f172a;
+      line-height: 1.65;
+      background: #f6faf7;
+    }
+    header {
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      color: #fff;
+      padding: 48px 24px;
+    }
+    header .wrap { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 18px; }
+    header img { width: 64px; height: 64px; border-radius: 16px; }
+    header h1 { margin: 0; font-size: 28px; }
+    header p { margin: 6px 0 0; opacity: .92; }
+    main { max-width: 760px; margin: 0 auto; padding: 32px 24px 64px; }
+    h2 { margin-top: 36px; font-size: 20px; }
+    ul { padding-left: 22px; }
+    code { background: #e6f2ea; padding: 1px 5px; border-radius: 5px; }
+    a { color: #15803d; }
+    .updated { color: #64748b; font-size: 14px; }
+    .card { background: #fff; border: 1px solid #e2eee7; border-radius: 14px; padding: 4px 24px 20px; }
+    footer { max-width: 760px; margin: 0 auto; padding: 0 24px 64px; color: #64748b; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <img src="icon-512.png" alt="Voetbal Poule Dashboard" />
+      <div>
+        <h1>Privacybeleid</h1>
+        <p>Voetbal Poule Dashboard — Chrome-extensie</p>
+      </div>
+    </div>
+  </header>
+  <main>
+    <p class="updated">Laatst bijgewerkt: 10 september 2026</p>
+
+    <div class="card">
+      <h2>Samenvatting</h2>
+      <ul>
+        <li>De extensie draait <strong>volledig in jouw browser</strong>.</li>
+        <li>Er is <strong>geen server</strong> en er worden <strong>geen gegevens naar buiten gestuurd</strong>.</li>
+        <li>Alle gegevens blijven <strong>lokaal</strong> op je apparaat en zijn door jou te verwijderen.</li>
+      </ul>
+    </div>
+
+    <h2>Welke gegevens verwerkt de extensie?</h2>
+    <p>
+      Wanneer je op een team-/poulepagina op voetbal.nl op
+      <strong>"Maak poule-dashboard"</strong> klikt en een competitie kiest, leest
+      de extensie met <strong>je eigen, ingelogde sessie</strong> de volgende
+      pagina's die je zelf mag bekijken:
+    </p>
+    <ul>
+      <li>de tab <strong>stand</strong> (teams, namen, logo's, punten);</li>
+      <li>de tab <strong>programma</strong> (geplande wedstrijden);</li>
+      <li>de tab <strong>uitslagen</strong> (gespeelde wedstrijden met eindstand);</li>
+      <li>en per club de <strong>team</strong>-tab (selectie: staf en spelers, met namen en foto's).</li>
+    </ul>
+    <p>
+      Deze gegevens worden omgezet in statistieken en opgeslagen in
+      <code>chrome.storage.local</code> van je browser, zodat je het dashboard
+      later opnieuw kunt openen zonder de pagina's opnieuw op te halen.
+    </p>
+
+    <h2>Wat de extensie <em>niet</em> doet</h2>
+    <ul>
+      <li>Geen gegevens naar een server of derde partij sturen.</li>
+      <li>Geen analytics, tracking, advertenties of profielen.</li>
+      <li>Geen wachtwoorden, cookies of inloggegevens opslaan of uitlezen.</li>
+      <li>Geen toegang tot pagina's buiten <code>www.voetbal.nl</code>.</li>
+      <li>Geen namen gebruiken van personen die op voetbal.nl afgeschermd zijn; die worden overgeslagen.</li>
+    </ul>
+
+    <h2>Bewaartermijn en verwijderen</h2>
+    <p>
+      Alles staat lokaal. Je verwijdert de gegevens door de extensie te verwijderen
+      of door de opslag te wissen via <code>chrome://extensions</code> → de
+      extensie → <strong>Details</strong> → <strong>Gegevens verwijderen</strong>.
+    </p>
+
+    <h2>Delen met derden</h2>
+    <p>Er worden geen gegevens gedeeld, verkocht of doorgegeven aan derden.</p>
+
+    <h2>Kinderen</h2>
+    <p>
+      De extensie verzamelt zelf geen gegevens en verstuurt niets. Namen van
+      jeugdspelers kunnen onderdeel zijn van de pagina's die je zelf bekijkt;
+      die worden alleen lokaal verwerkt en niet verspreid.
+    </p>
+
+    <h2>Wijzigingen</h2>
+    <p>
+      Dit beleid kan worden bijgewerkt wanneer de functionaliteit verandert. De
+      datum bovenaan geeft de laatste wijziging aan.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Vragen over dit beleid? Open een issue op
+      <a href="https://github.com/gevezex/voetbal-nl-dashboard/issues">github.com/gevezex/voetbal-nl-dashboard/issues</a>.
+    </p>
+
+    <h2>English summary</h2>
+    <p>
+      Voetbal Poule Dashboard is a Chrome extension that turns a KNVB youth
+      football pool on voetbal.nl into a local statistics and prediction
+      dashboard. It runs entirely in your browser: there is no server, and no
+      data is transmitted. It only reads the voetbal.nl standings, fixtures,
+      results and team selection pages that you are allowed to view, using your
+      own logged-in session, and stores the result locally in
+      <code>chrome.storage.local</code>. It does not collect, sell or share any
+      data. You can delete the local data at any time by removing the extension
+      or clearing its storage.
+    </p>
+  </main>
+  <footer>
+    Voetbal Poule Dashboard is niet officieel verbonden aan of goedgekeurd door de
+    KNVB of voetbal.nl.
+  </footer>
+</body>
+</html>

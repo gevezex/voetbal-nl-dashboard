@@ -25,3 +25,10 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# gegenereerde Chrome Web Store-pakketten
+/store/dist
+
+# lokale dev-/browser-hulpjes
+/.dev
+

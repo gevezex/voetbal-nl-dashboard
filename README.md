@@ -128,6 +128,20 @@ scripts/
 `lib/` en `extension-src/` zijn de enige TypeScript-bronnen; `extension/dashboard.js` is een
 gegenereerd bestand dat je met `pnpm build:ext` opnieuw maakt na wijzigingen.
 
+## 🏪 Publiceren naar de Chrome Web Store
+
+Alles wat je voor de winkel nodig hebt staat in **[`store/`](./store/README.md)**
+(teksten, iconen, privacybeleid, permissie-onderbouwing en de checklist).
+
+```bash
+pnpm package      # bouwt de extensie en maakt store/dist/voetbal-poule-dashboard-<versie>.zip
+pnpm release      # typecheck + package
+pnpm assets:generate   # iconen/promotiebeelden opnieuw genereren (vereist rsvg-convert)
+```
+
+Het privacybeleid staat in `store/privacy-policy.md` en als kant-en-klare
+GitHub Pages-pagina in `docs/privacy.html`.
+
 ## 🛠️ Tech-stack
 
 - **Chrome Manifest V3** (content script + service worker + popup).

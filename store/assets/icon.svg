@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Voetbal Poule Dashboard">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="126.5" y2="102.4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22c55e" />
+      <stop offset="1" stop-color="#15803d" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+  
+    <circle cx="256" cy="256" r="176" fill="#ffffff" />
+    <g stroke="#0f172a" stroke-width="11" stroke-linecap="round" opacity="0.92"><line x1="256.0" y1="184.0" x2="256.0" y2="80.0" /><line x1="324.5" y1="233.8" x2="423.4" y2="201.6" /><line x1="298.3" y1="314.2" x2="359.5" y2="398.4" /><line x1="213.7" y1="314.2" x2="152.5" y2="398.4" /><line x1="187.5" y1="233.8" x2="88.6" y2="201.6" /></g>
+    <polygon points="256.0,184.0 324.5,233.8 298.3,314.2 213.7,314.2 187.5,233.8" fill="#0f172a" />
+    <g fill="#0f172a"><polygon points="344.2,104.6 372.7,125.4 361.8,158.9 326.5,158.9 315.6,125.4" /><polygon points="398.7,272.4 427.2,293.1 416.3,326.6 381.0,326.6 370.1,293.1" /><polygon points="256.0,376.0 284.5,396.7 273.6,430.3 238.4,430.3 227.5,396.7" /><polygon points="113.3,272.4 141.9,293.1 131.0,326.6 95.7,326.6 84.8,293.1" /><polygon points="167.8,104.6 196.4,125.4 185.5,158.9 150.2,158.9 139.3,125.4" /></g>
+</svg>

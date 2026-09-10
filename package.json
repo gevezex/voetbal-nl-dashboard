@@ -5,7 +5,10 @@
   "description": "Chrome-extensie die van elke KNVB-jeugdpoule op voetbal.nl een statistisch analyse-dashboard maakt.",
   "scripts": {
     "build:ext": "node scripts/build-extension.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "assets:generate": "node scripts/generate-store-assets.mjs",
+    "package": "pnpm build:ext && node scripts/package-extension.mjs",
+    "release": "pnpm typecheck && pnpm package"
   },
   "dependencies": {
     "chart.js": "^4.5.1"

@@ -1,0 +1,25 @@
+Voetbal Poule Dashboard maakt van elke KNVB-jeugdpoule op voetbal.nl een compleet analyse-dashboard — rechtstreeks vanuit je eigen, ingelogde browsersessie.
+
+Open een team-/poulepagina op voetbal.nl, klik op de knop "Maak poule-dashboard", kies de competitie en de extensie leest de tabs stand, programma en uitslagen (en per club de selectie). Alles wordt lokaal opgeslagen en het dashboard opent in een nieuw tabblad.
+
+WAT JE KRIJGT
+
+• Overzicht — poulekop, kerncijfers, de stand met sparklines, small multiples van alle teams, gemiddeld aantal doelpunten per wedstrijd en de komende speelronde met winkansen.
+• Poule-analyse — positieverloop (bump chart), aanval x verdediging (kwadrant), archetype-clustering, doelpuntenhistogram en de uitslagenmatrix van alle onderlinge duels.
+• Modellen — Elo, Massey, Colley, Bradley-Terry en Pi-ratings, plus aanvals- en verdedigingscoefficienten (totaal en apart thuis/uit).
+• Voorspelling — kies een wedstrijd en een model (Poisson, Dixon-Coles, bivariaat of negatief-binomiaal) en bekijk de volledige kansmatrix, 1X2, over/under, beide-teams-score en verwachte punten.
+• Scenario — Monte Carlo van het restseizoen met kampioens-, top- en degradatiekansen, de positieverdeling en de puntenwaaier.
+• Per team — uitgebreide KPI's, thuis/uit-splitsing en thuisvoordeel-index, momentum (rolling/EWMA), sterkteratings, programmazwaarte, geluk en regressie, stijl en archetype, onderlinge historie over meerdere seizoenen, de selectie (staf en spelers) en nog veel meer.
+• Uitleg in gewone taal — bij elk blok opent een info-icoon een uitgebreide uitleg: wat het is, hoe je het leest en waarom het nuttig is.
+
+VOOR WIE
+
+Voor trainers, coaches en ouders die hun jeugdteam beter willen begrijpen: wat valt op, wie is in vorm, hoe zwaar is het resterende programma en wat zijn realistische kansen?
+
+PRIVACY
+
+De extensie draait volledig in jouw browser. Er is geen server: je voetbal.nl-sessie en je gegevens verlaten je apparaat niet. Opgeslagen poules staan lokaal in chrome.storage en kun je zelf verwijderen. Zie het privacybeleid voor de details.
+
+LET OP
+
+De extensie leest alleen pagina's die je zelf in je browser mag bekijken. Houd je aan de gebruiksvoorwaarden van voetbal.nl. Niet officieel verbonden aan of goedgekeurd door de KNVB of voetbal.nl.

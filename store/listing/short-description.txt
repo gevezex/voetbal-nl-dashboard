@@ -1,0 +1,1 @@
+Maak van elke KNVB-jeugdpoule een statistiek- en voorspellingsdashboard. Alles lokaal in je browser.
