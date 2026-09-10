@@ -61,11 +61,11 @@ store/
 - [ ] **Trader-status (DSA)** verklaren in het dashboard (verplicht voor EU-distributie)
 - [ ] **2-stapsverificatie** op het Google-account aan hebben staan
 - [x] ZIP geüpload, listing + privacy + distributie ingevuld
-- [ ] **Ter beoordeling verzenden** (laatste stap, point of no return)
+- [x] **Ingediend ter beoordeling** — status: *Wacht op beoordeling* (met automatisch publiceren na goedkeuring)
 - [ ] Na goedkeuring: versie bumpen (`manifest.json` + `package.json`) bij elke update
 
-> **Concept-item in het dashboard:** `abcobomhkkmchncifpbchjijgacejaeg`
-> (`Voetbal Poule Dashboard`, status *Concept*).
+> **Item in het dashboard:** `abcobomhkkmchncifpbchjijgacejaeg`
+> (`Voetbal Poule Dashboard`) — ingediend op 10 september 2026.
 
 ---
 
