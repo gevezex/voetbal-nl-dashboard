@@ -16264,7 +16264,7 @@
     const nav = VIEWS.map(
       (v) => `<button class="nav-btn ${state.view === v.id ? "active" : ""}" data-view="${v.id}">${v.label}</button>`
     ).join("");
-    return `<div class="card header-card" style="position:relative">` + (logo ? `<img class="club-logo" src="${esc(logo)}" alt="${esc(selected.shortName)}">` : "") + `<div class="brand"><span class="logo">\u26BD</span>Voetbal Poule Dashboard</div><h1 style="padding-right:${logo ? "70px" : "0"}">${esc(poule.name)}</h1><div class="meta">${esc(poule.season)}${poule.division ? " \xB7 " + esc(poule.division) : ""}${poule.category ? " \xB7 " + esc(poule.category) : ""}${poule.day ? " \xB7 " + esc(poule.day) : ""}${poule.competition ? " \xB7 " + esc(poule.competition) : ""} \xB7 bijgewerkt ${fdate(new Date(poule.updatedAt).getTime())}</div><div class="nav">${nav}</div><div class="chips" style="margin-top:10px">${state.view === "team" ? `<button class="chip" data-back>\u2190 Overzicht</button>` : ""}${chips}</div></div>`;
+    return `<div class="card header-card" style="position:relative">` + (logo ? `<img class="club-logo" src="${esc(logo)}" alt="${esc(selected.shortName)}">` : "") + `<div class="brand"><img class="logo" src="icons/icon.svg" width="32" height="32" alt="">Voetbal Poule Dashboard</div><h1 style="padding-right:${logo ? "70px" : "0"}">${esc(poule.name)}</h1><div class="meta">${esc(poule.season)}${poule.division ? " \xB7 " + esc(poule.division) : ""}${poule.category ? " \xB7 " + esc(poule.category) : ""}${poule.day ? " \xB7 " + esc(poule.day) : ""}${poule.competition ? " \xB7 " + esc(poule.competition) : ""} \xB7 bijgewerkt ${fdate(new Date(poule.updatedAt).getTime())}</div><div class="nav">${nav}</div><div class="chips" style="margin-top:10px">${state.view === "team" ? `<button class="chip" data-back>\u2190 Overzicht</button>` : ""}${chips}</div></div>`;
   }
   function rosterRow(people) {
     if (!people.length) return "";
@@ -16982,11 +16982,22 @@
       state.teamId = team;
       state.view = "team";
     }
-    const d = await new Promise(
-      (res) => chrome.storage.local.get("poules", (x) => res(x.poules || {}))
-    );
-    state.poules = d;
-    state.allPoules = Object.values(d);
+    try {
+      const data = await new Promise(
+        (resolve2, reject) => chrome.runtime.sendMessage({ type: "get-poules" }, (response) => {
+          const error = chrome.runtime.lastError?.message || response?.error;
+          if (error || !response) reject(new Error(error || "Dashboards laden mislukt"));
+          else resolve2(response);
+        })
+      );
+      if (state.pouleId) state.pouleId = data.pouleAliases[state.pouleId] || state.pouleId;
+      state.poules = data.poules;
+      state.allPoules = Object.values(data.poules);
+    } catch {
+      const app = document.getElementById("app");
+      if (app) app.textContent = "Dashboards laden mislukt. Laad deze pagina opnieuw.";
+      return;
+    }
     initTooltips();
     render();
   }

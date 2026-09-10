@@ -10,7 +10,7 @@
  *           dus dit script hoeft alleen na een ontwerpwijziging te draaien.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -65,55 +65,16 @@ function ballSvg() {
 
 /** Het extensie-/winkel-icoon als SVG-string. */
 function iconSvg() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Voetbal Poule Dashboard">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="126.5" y2="102.4" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="${GREEN_LIGHT}" />
-      <stop offset="1" stop-color="${GREEN_DARK}" />
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)" />
-  ${ballSvg()}
-</svg>
-`;
+  return readFileSync(resolve(ROOT, 'store/assets/icon.svg'), 'utf8');
 }
 
-/** Kleine promotietegel 440x280. */
+/** Bewerkbare promotieconcepten als bronvectoren. */
 function promoBustileSvg() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="440" y2="280" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="${GREEN_LIGHT}" />
-      <stop offset="1" stop-color="${GREEN_DARK}" />
-    </linearGradient>
-  </defs>
-  <rect width="440" height="280" fill="url(#bg)" />
-  <g transform="translate(38 74) scale(0.26)">${ballSvg()}</g>
-  <text x="196" y="140" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#ffffff">Voetbal Poule</text>
-  <text x="196" y="178" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#dcfce7">Dashboard</text>
-  <text x="196" y="212" font-family="Helvetica, Arial, sans-serif" font-size="15" fill="#dcfce7">Statistiek &amp; voorspellingen</text>
-</svg>
-`;
+  return readFileSync(resolve(ROOT, 'store/assets/promo-tile-440x280.svg'), 'utf8');
 }
 
-/** Marquee 1400x560. */
 function marqueeSvg() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1400" y2="560" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="${GREEN_LIGHT}" />
-      <stop offset="1" stop-color="${GREEN_DARK}" />
-    </linearGradient>
-  </defs>
-  <rect width="1400" height="560" fill="url(#bg)" />
-  <g transform="translate(120 176) scale(0.42)">${ballSvg()}</g>
-  <text x="560" y="250" font-family="Helvetica, Arial, sans-serif" font-size="66" font-weight="700" fill="#ffffff">Voetbal Poule Dashboard</text>
-  <text x="560" y="320" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#dcfce7">Van elke KNVB-jeugdpoule een compleet analyse-dashboard</text>
-  <text x="560" y="366" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#dcfce7">Sterkeratings · modellen · voorspellingen · Monte Carlo</text>
-  <rect x="560" y="404" width="26" height="26" rx="7" fill="#ffffff" transform="rotate(0)" />
-  <text x="596" y="426" font-family="Helvetica, Arial, sans-serif" font-size="24" fill="#ffffff">Lokaal in je browser · geen server</text>
-</svg>
-`;
+  return readFileSync(resolve(ROOT, 'store/assets/marquee-1400x560.svg'), 'utf8');
 }
 
 function render(svg, out, width, height) {
@@ -134,6 +95,8 @@ function main() {
   mkdirSync(resolve(ROOT, 'store/assets'), { recursive: true });
 
   const icon = iconSvg();
+  writeFileSync(resolve(ROOT, 'extension/icons/icon.svg'), icon);
+  writeFileSync(resolve(ROOT, 'docs/icon.svg'), icon);
 
   // Chrome-extensie-iconen.
   for (const size of [16, 32, 48, 128]) {
@@ -144,6 +107,7 @@ function main() {
   writeFileSync(resolve(ROOT, 'store/assets/icon.svg'), icon);
   render(icon, resolve(ROOT, 'store/assets/store-icon-128.png'), 128, 128);
   render(icon, resolve(ROOT, 'store/assets/icon-512.png'), 512, 512);
+  copyFileSync(resolve(ROOT, 'store/assets/icon-512.png'), resolve(ROOT, 'docs/icon-512.png'));
   render(promoBustileSvg(), resolve(ROOT, 'store/assets/promo-tile-440x280.png'), 440, 280);
   render(marqueeSvg(), resolve(ROOT, 'store/assets/marquee-1400x560.png'), 1400, 560);
 

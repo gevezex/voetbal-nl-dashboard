@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
   <meta charset="utf-8" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
   <style>
     body { font-family: -apple-system, system-ui, sans-serif; margin: 0; width: 320px; color: #111; }
     header { background: #16a34a; color: #fff; padding: 14px 16px; }
-    header h1 { font-size: 15px; margin: 0; }
+    header h1 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 0; }
+    header .logo { width: 32px; height: 32px; flex-shrink: 0; object-fit: contain; }
     header p { font-size: 11px; margin: 4px 0 0; opacity: .9; }
     #poules { padding: 12px 14px; }
     .empty { font-size: 13px; color: #555; }
@@ -19,7 +21,7 @@
 </head>
 <body>
   <header>
-    <h1>⚽ Voetbal Poule Dashboard</h1>
+    <h1><img class="logo" src="icons/icon.svg" width="32" height="32" alt="">Voetbal Poule Dashboard</h1>
     <p>Ga naar een team/poule op voetbal.nl en klik op de groene knop.</p>
   </header>
   <div id="poules"><p class="empty">Laden…</p></div>

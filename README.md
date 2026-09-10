@@ -1,4 +1,4 @@
-# ⚽ Voetbal Poule Dashboard — Chrome-extensie
+# <img src="store/assets/icon.svg" width="32" height="32" alt=""> Voetbal Poule Dashboard — Chrome-extensie
 
 Een **Chrome-extensie (Manifest V3)** die van elke **KNVB-jeugdpoule** op
 [voetbal.nl](https://www.voetbal.nl) een compleet analyse-dashboard maakt. De extensie leest de

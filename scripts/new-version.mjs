@@ -76,7 +76,7 @@ async function main() {
   const pkgVersion = String(pkg.version);
   const argVersion = process.argv[2]?.trim() || '';
 
-  console.log('\n' + bold('⚽ Voetbal Poule Dashboard — nieuwe versie releasen'));
+  console.log('\n' + bold('Voetbal Poule Dashboard — nieuwe versie releasen'));
   console.log(`   Lokaal bekend: manifest.json = ${localVersion}, package.json = ${pkg.version}\n`);
 
   const rl = createInterface({ input, output });

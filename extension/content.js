@@ -193,9 +193,13 @@
     const level = lm ? 'O' + lm[1] + (lm[2] || '') : category ? category + '-1' : null;
 
     const poule = {
-      id: OUR_TEAM_ID + '-' + (competitionSlug || 'default') + '-' + (new Date().getTime()),
+      id: OUR_TEAM_ID + '-' + (competitionSlug || 'default'),
       name: ourTeam.name + ' · ' + competition,
-      season: '2026/2027',
+      season: (() => {
+        const now = new Date();
+        const year = now.getFullYear() - (now.getMonth() < 6 ? 1 : 0);
+        return year + '/' + (year + 1);
+      })(),
       category,
       level,
       division,
@@ -218,14 +222,14 @@
     button.disabled = true;
     try {
       const poule = await gatherPoule(slug, label);
-      await new Promise((resolve) =>
-        chrome.storage.local.get('poules', (d) => {
-          const all = d.poules || {};
-          all[poule.id] = poule;
-          chrome.storage.local.set({ poules: all }, resolve);
-        })
-      );
-      chrome.runtime.sendMessage({ type: 'open-dashboard', pouleId: poule.id });
+      const saved = await new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ type: 'save-poule', poule }, (response) => {
+          const error = chrome.runtime.lastError?.message || response?.error;
+          if (error || !response?.pouleId) reject(new Error(error || 'Opslaan mislukt'));
+          else resolve(response);
+        });
+      });
+      chrome.runtime.sendMessage({ type: 'open-dashboard', pouleId: saved.pouleId });
       button.textContent = old;
       button.disabled = false;
     } catch (e) {

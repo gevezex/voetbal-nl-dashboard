@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1727"/><stop offset="1" stop-color="#113c32"/></linearGradient><radialGradient id="glow"><stop stop-color="#22c55e" stop-opacity=".22"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></radialGradient><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#86efac" stroke-opacity=".045"/></pattern></defs><rect x="0" y="0" width="440" height="280" rx="0" fill="url(#bg)" /><rect x="0" y="0" width="440" height="280" rx="0" fill="url(#grid)" /><g font-family="Helvetica,Arial,sans-serif"><ellipse cx="368" cy="180" rx="240" ry="230" fill="url(#glow)"/><g fill="none" stroke="#86efac" opacity=".09" stroke-width="1.5"><path d="M288-20V300M248 140H490"/><circle cx="364" cy="140" r="66"/><rect x="248" y="-20" width="225" height="330" rx="12"/></g><rect x="25" y="26" width="25" height="3" rx="1.5" fill="#4ade80" /><text x="59" y="31" font-size="9" fill="#86efac" font-weight="700" letter-spacing="1.1">VAN STAND NAAR INZICHT</text><text x="24" y="73" font-size="29" fill="#fff" font-weight="700" letter-spacing="-.7">Voetbal Poule</text><text x="24" y="106" font-size="29" fill="#fff" font-weight="700" letter-spacing="-.7">Dashboard</text><text x="25" y="141" font-size="20" fill="#86efac" font-weight="700" >Ken je poule.</text><text x="25" y="167" font-size="20" fill="#86efac" font-weight="700" >Zie wat er kan.</text><g transform="translate(285 73) scale(0.263671875)">  <g transform="translate(30.72 0) scale(0.88 1)">
+  <path d="M256 12 500 92V258C500 365 374 456 256 500 138 456 12 365 12 258V92Z" fill="#fff"/>
+  <path d="M256 40 472 112V258C472 349 360 431 256 470 152 431 40 349 40 258V112Z" fill="#15803d"/>
+  <rect x="136" y="322" width="56" height="70" rx="12" fill="#bbf7d0"/>
+  <rect x="228" y="291" width="56" height="101" rx="12" fill="#fff"/>
+  <rect x="320" y="260" width="56" height="132" rx="12" fill="#86efac"/>
+  </g>
+  <g transform="translate(256 164) scale(0.9)">
+    <circle r="100" fill="#fff"/>
+    <g fill="none" stroke="#0f172a" stroke-width="9" stroke-linejoin="round">
+      <path d="M0-38 36-12 22 31-22 31-36-12Z" fill="#0f172a"/>
+      <path d="M0-38V-99M36-12 95-31M22 31 59 80M-22 31-59 80M-36-12-95-31"/>
+    </g>
+  </g>
+</g><rect x="25" y="192" width="226" height="45" rx="10" fill="#153c32" stroke="#31584a"/><path d="M38 225 51 218 64 221 78 204" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><text x="91" y="211" font-size="11" fill="#ecfdf5" font-weight="600" >Analyse · Voorspellingen</text><text x="91" y="227" font-size="11" fill="#b8d5c8" font-weight="400" >Scenario’s voor jouw team</text><text x="25" y="260" font-size="10" fill="#a1b8b1" font-weight="400" >Voor voetbal.nl · lokaal in je browser</text></g></svg>

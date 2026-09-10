@@ -1,4 +1,7 @@
 import { build } from 'esbuild';
+import { copyFileSync } from 'node:fs';
+
+copyFileSync(new URL('../store/assets/icon.svg', import.meta.url), new URL('../extension/icons/icon.svg', import.meta.url));
 
 await build({
   entryPoints: ['extension-src/dashboard.ts'],
