@@ -14985,7 +14985,7 @@
     },
     opponentComparison: {
       title: "Vergelijking per tegenstander",
-      body: "<p>Per tegenstander zie je twee dingen naast elkaar:</p><ul><li><strong>Ons record</strong> \u2014 hoe wij het tegen hen deden.</li><li><strong>Zij tegen de rest</strong> \u2014 hoe die tegenstander presteert tegen alle andere teams.</li></ul><p>Is ons record beter dan hun algemene record, dan ligt die tegenstander ons goed. Andersom kan een ploeg ons juist liggen in de weg zitten. De kans op winst uit het model wordt erbij gezet als richtlijn.</p>"
+      body: '<p>Per tegenstander zie je twee dingen naast elkaar:</p><ul><li><strong>Ons record</strong> \u2014 hoe wij het tegen hen deden.</li><li><strong>Zij tegen de rest</strong> \u2014 hoe die tegenstander presteert tegen alle andere teams.</li></ul><p>Is ons record beter dan hun algemene record, dan ligt die tegenstander ons goed. Andersom kan een ploeg ons juist in de weg zitten. De kans op winst uit het model wordt erbij gezet als richtlijn.</p><h5>De balk per tegenstander</h5><p>Elke horizontale balk hoort bij \xE9\xE9n tegenstander en telt op tot <strong>100%</strong>: het groene deel is de kans dat wij winnen, het grijze dat we gelijkspelen en het rode dat we verliezen.</p><p class="tip-note">Let op: de kansen van verschillende tegenstanders staan los van elkaar. Ze tellen dus <strong>niet</strong> op tot \xE9\xE9n geheel \u2014 je speelt immers tegen \xE9\xE9n tegenstander per wedstrijd.</p>'
     },
     opponentSpider: {
       title: "Sterkte van de tegenstander",
@@ -16230,7 +16230,10 @@
     let head = '<div class="hm-row"><div class="hm-axis"></div>';
     for (let y = 0; y < size; y++) head += `<div class="hm-head">${y}</div>`;
     head += "</div>";
-    return `<div class="hm-wrap"><div class="hm-legend"><span>${esc(homeName)} (rij)</span><span>${esc(awayName)} (kolom)</span></div><div class="hm">${head}${rows}</div><div class="muted" style="margin-top:6px">Kans per uitslag (thuisdoelpunten \xD7 uitdoelpunten). Donkerder = waarschijnlijker.</div></div>`;
+    return `<div class="hm-wrap"><div class="hm-body"><div class="hm-rowlabel"><span>${esc(homeName)}</span></div><div class="hm-cols"><div class="hm-coltitle" style="width:${size * 34}px">${esc(awayName)}</div>${head}${rows}</div></div><div class="muted" style="margin-top:8px">Kans per uitslag: de rij is het aantal doelpunten van <b>${esc(homeName)}</b>, de kolom dat van <b>${esc(awayName)}</b>. Donkerder = waarschijnlijker.</div></div>`;
+  }
+  function wdlLegend(homeName, awayName, pr, small = false) {
+    return `<div class="wdl-legend${small ? " small" : ""}"><span class="wdl-home">${pct(pr.probHome)} ${homeName} wint</span><span class="wdl-draw">${pct(pr.probDraw)} gelijk</span><span class="wdl-away">${pct(pr.probAway)} ${awayName} wint</span></div>`;
   }
   function kpiCard(label, value, sub = "") {
     return `<div class="kpi"><div class="l">${esc(label)}</div><div class="v">${esc(value)}</div><div class="s">${sub}</div></div>`;
@@ -16307,7 +16310,7 @@
       const a = teamById(poule, m.awayTeamId);
       const pr = predictMatch(h, a, teams, matches);
       const tone = pr.confidence === "hoog" ? "green" : pr.confidence === "gemiddeld" ? "blue" : "neutral";
-      return `<div class="card" style="margin-bottom:0"><div style="display:flex;justify-content:space-between;font-size:13px"><b>${short(h)}</b><b>${short(a)}</b></div><div style="text-align:center" class="muted">${fdate(m.kickoff)}${m.round ? " \xB7 ronde " + m.round : ""}</div><div class="bar-wrap" style="margin-top:8px;display:flex;height:12px"><div style="width:${pr.probHome * 100}%;background:var(--green);height:100%"></div><div style="width:${pr.probDraw * 100}%;background:#a1a1aa;height:100%"></div><div style="width:${pr.probAway * 100}%;background:var(--red);height:100%"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px" class="muted"><span style="color:${pr.probHome > pr.probAway ? "var(--green)" : ""}">${pct(pr.probHome)} W</span><span>${pct(pr.probDraw)} G</span><span style="color:${pr.probAway > pr.probHome ? "var(--red)" : ""}">${pct(pr.probAway)} V</span></div><div style="margin-top:6px"><span class="badge ${tone}">${pr.confidence}</span></div></div>`;
+      return `<div class="card" style="margin-bottom:0"><div style="display:flex;justify-content:space-between;font-size:13px"><b>${short(h)}</b><b>${short(a)}</b></div><div style="text-align:center" class="muted">${fdate(m.kickoff)}${m.round ? " \xB7 ronde " + m.round : ""}</div><div class="bar-wrap" style="margin-top:8px;display:flex;height:12px"><div style="width:${pr.probHome * 100}%;background:var(--green);height:100%"></div><div style="width:${pr.probDraw * 100}%;background:#a1a1aa;height:100%"></div><div style="width:${pr.probAway * 100}%;background:var(--red);height:100%"></div></div>` + wdlLegend(short(h), short(a), pr, true) + `<div style="margin-top:6px"><span class="badge ${tone}">${pr.confidence}</span></div></div>`;
     }).join("") + `</div>` : `<p class="muted">Geen geplande wedstrijden meer.</p>`;
     return kpi + `<div class="section-title">Stand ${tip("stand")}</div><div class="card">${table}</div><div class="section-title">Alle teams in \xE9\xE9n oogopslag ${tip("smallMultiples")}</div><div class="card">${smallMultiples}</div><div class="section-title">Doelpunten per wedstrijd (gem.) ${tip("goalsForAgainst")}</div><div class="card"><div class="chart-box"><canvas id="goalsChart"></canvas></div></div><div class="section-title">Volgende speelronde ${tip("nextRound")}</div>${nextMatches}`;
   }
@@ -16362,7 +16365,7 @@
     const ou = `<div class="ou-row">` + pr.overUnder.map(
       (o) => `<div class="ou"><div class="ou-line">${o.line}</div><div class="bar-wrap"><div class="bar" style="width:${o.over * 100}%;background:var(--green)"></div></div><div class="muted">Over ${pct(o.over)} \xB7 Under ${pct(o.under)}</div></div>`
     ).join("") + `</div>`;
-    return models + `<div style="display:flex;justify-content:space-between;font-size:14px;margin:8px 0 2px"><b>${short(pr.home)}</b><b>${short(pr.away)}</b></div><div class="muted">${fdate(match.kickoff)}${match.round ? " \xB7 ronde " + match.round : ""} \xB7 model: ${esc(MODELS.find((m) => m.id === pr.model).label)} \xB7 zekerheid ${pr.confidence}</div><div class="bar-wrap" style="display:flex;height:14px;margin-top:10px"><div style="width:${pr.probHome * 100}%;background:var(--green)"></div><div style="width:${pr.probDraw * 100}%;background:#a1a1aa"></div><div style="width:${pr.probAway * 100}%;background:var(--red)"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:5px"><span style="color:var(--green)">${pct(pr.probHome)} winst</span><span>${pct(pr.probDraw)} gelijk</span><span style="color:var(--red)">${pct(pr.probAway)} verlies</span></div>` + markets + heatmapMatrix(pr, pr.home.shortName || pr.home.name, pr.away.shortName || pr.away.name) + ou;
+    return models + `<div style="display:flex;justify-content:space-between;font-size:14px;margin:8px 0 2px"><b>${short(pr.home)}</b><b>${short(pr.away)}</b></div><div class="muted">${fdate(match.kickoff)}${match.round ? " \xB7 ronde " + match.round : ""} \xB7 model: ${esc(MODELS.find((m) => m.id === pr.model).label)} \xB7 zekerheid ${pr.confidence}</div><div class="bar-wrap" style="display:flex;height:14px;margin-top:10px"><div style="width:${pr.probHome * 100}%;background:var(--green)"></div><div style="width:${pr.probDraw * 100}%;background:#a1a1aa"></div><div style="width:${pr.probAway * 100}%;background:var(--red)"></div></div>` + wdlLegend(short(pr.home), short(pr.away), pr) + markets + heatmapMatrix(pr, pr.home.shortName || pr.home.name, pr.away.shortName || pr.away.name) + ou;
   }
   function homeAwayTable(ha) {
     const rec = (label, r) => `<tr><td><b>${label}</b></td><td class="num">${r.played}</td><td class="num">${r.won}-${r.drawn}-${r.lost}</td><td class="num">${r.goalsFor}-${r.goalsAgainst}</td><td class="num"><b>${n2(r.ppg)}</b></td></tr>`;
@@ -16434,7 +16437,7 @@
       const chips = h2h.map((r) => `<span class="${r.result}">${r.teamAGoals}-${r.teamBGoals}</span>`).join("");
       return `<tr><td><a href="#" data-team-link="${esc(opp.id)}">${short(opp)}</a><div class="muted">sterkte ${Math.round(str.overall)}</div></td><td><b>${our.won}-${our.drawn}-${our.lost}</b> <span class="muted">(${our.played})</span><br>${our.goalsFor}-${our.goalsAgainst}</td><td><b>${oppVsRest.won}-${oppVsRest.drawn}-${oppVsRest.lost}</b> <span class="muted">(${oppVsRest.played})</span><br>${oppVsRest.goalsFor}-${oppVsRest.goalsAgainst}</td><td><b style="color:var(--green)">${pct(chance.win)}</b><div class="muted">G ${pct(chance.draw)} \xB7 V ${pct(chance.loss)}</div></td><td><span class="score-chips">${chips || "\u2014"}</span></td><td><span class="badge ${i.tone}">${i.text}</span></td></tr>`;
     }).join("") + `</tbody></table></div>`;
-    return `<div class="section-title">Team \xB7 ${short(team)} ${formBadges(form)} ${tip("form")}</div>` + rosterSection(poule, team.id) + basicKpi + detailKpi + margins + momentumSection + `<div class="grid two"><div class="card"><h2>Teamprofiel ${tip("teamStrength")}</h2><div class="chart-box"><canvas id="teamRadar"></canvas></div>${strengthBars(team, teams, matches)}</div><div class="card"><h2>Doelsaldo over tijd ${tip("goalDiffTimeline")}</h2><div class="chart-box"><canvas id="gdChart"></canvas></div></div></div>` + ratingsSection + thuisUit + sosSection + luckSection + styleSection + h2hSection + `<div class="section-title">Volgende wedstrijd \xB7 voorspelling ${tip("prediction")}</div>` + (nextMatch ? nextPrediction + leverageHtml : `<p class="muted">Geen geplande wedstrijden meer.</p>`) + `<div class="section-title">Vergelijking per tegenstander ${tip("opponentComparison")}</div><div class="card"><div class="chart-box" style="height:220px;max-width:380px;margin:0 auto"><canvas id="donut"></canvas></div><div style="overflow-x:auto">${compTable}</div></div>`;
+    return `<div class="section-title">Team \xB7 ${short(team)} ${formBadges(form)} ${tip("form")}</div>` + rosterSection(poule, team.id) + basicKpi + detailKpi + margins + momentumSection + `<div class="grid two"><div class="card"><h2>Teamprofiel ${tip("teamStrength")}</h2><div class="chart-box"><canvas id="teamRadar"></canvas></div>${strengthBars(team, teams, matches)}</div><div class="card"><h2>Doelsaldo over tijd ${tip("goalDiffTimeline")}</h2><div class="chart-box"><canvas id="gdChart"></canvas></div></div></div>` + ratingsSection + thuisUit + sosSection + luckSection + styleSection + h2hSection + `<div class="section-title">Volgende wedstrijd \xB7 voorspelling ${tip("prediction")}</div>` + (nextMatch ? nextPrediction + leverageHtml : `<p class="muted">Geen geplande wedstrijden meer.</p>`) + `<div class="section-title">Vergelijking per tegenstander ${tip("opponentComparison")}</div><div class="card"><h2>Kans op winst / gelijk / verlies per tegenstander</h2><div class="chart-box" style="height:${Math.max(200, rows.length * 34 + 50)}px"><canvas id="oppChart"></canvas></div><div class="muted" style="margin:-4px 0 12px">Elke balk is \xE9\xE9n tegenstander en telt op tot 100%: de kans dat <b>${short(team)}</b> wint (groen), gelijk speelt (grijs) of verliest (rood). De kansen per tegenstander zijn onafhankelijk van elkaar en tellen dus <b>niet</b> op tot \xE9\xE9n geheel.</div><div style="overflow-x:auto">${compTable}</div></div>`;
   }
   function modelsView(poule) {
     const teams = teamsArg(poule);
@@ -16608,7 +16611,10 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: { y: { reverse: true, min: 0.5, max: teams.length + 0.5, ticks: { stepSize: 1 } } }
+            scales: {
+              y: { reverse: true, min: 0.5, max: teams.length + 0.5, ticks: { stepSize: 1 } },
+              x: { title: { display: true, text: "Speelronde (R = speelronde)" } }
+            }
           }
         })
       );
@@ -16677,7 +16683,11 @@
         new Chart(gd, {
           type: "line",
           data: { labels: rounds.map((r) => "R" + r), datasets: [{ label: team.shortName || team.name, data: vals, borderColor: "#16a34a", fill: true, backgroundColor: "rgba(22,163,74,.12)", tension: 0.3 }] },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { title: { display: true, text: "Speelronde (R = speelronde)" } } }
+          }
         })
       );
     }
@@ -16695,7 +16705,14 @@
               { label: "EWMA-vorm", data: mom.ewmaSeries, borderColor: "#2563eb", borderDash: [6, 4], pointRadius: 0 }
             ]
           },
-          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, suggestedMax: 3 } } }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, suggestedMax: 3 },
+              x: { title: { display: true, text: "Duel (D = duel)" } }
+            }
+          }
         })
       );
     }
@@ -16706,7 +16723,11 @@
         new Chart(gdMom, {
           type: "line",
           data: { labels: mom.rollingGd.map((_, i) => "D" + (i + 1)), datasets: [{ label: "Rolling doelsaldo", data: mom.rollingGd, borderColor: "#f59e0b", tension: 0.3, pointRadius: 2 }] },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { title: { display: true, text: "Duel (D = duel)" } } }
+          }
         })
       );
     }
@@ -16730,14 +16751,36 @@
         })
       );
     }
-    const donut = document.getElementById("donut");
-    if (donut) {
-      const rows = poule.teams.filter((t) => t.id !== team.id).map((t) => ({ name: t.shortName || t.name, value: chanceVsOpponent(team.id, t.id, teams, poule.matches).win })).sort((a, b) => b.value - a.value);
+    const oppEl = document.getElementById("oppChart");
+    if (oppEl) {
+      const teamName = team.shortName || team.name;
+      const rows = poule.teams.filter((t) => t.id !== team.id).map((t) => ({
+        name: t.shortName || t.name,
+        ...chanceVsOpponent(team.id, t.id, teams, poule.matches)
+      })).sort((a, b) => b.win - a.win);
       charts.push(
-        new Chart(donut, {
-          type: "doughnut",
-          data: { labels: rows.map((r) => r.name), datasets: [{ data: rows.map((r) => r.value), backgroundColor: rows.map((_, i) => chartColor(i)) }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: (c) => " " + pct(c.parsed) } } } }
+        new Chart(oppEl, {
+          type: "bar",
+          data: {
+            labels: rows.map((r) => r.name),
+            datasets: [
+              { label: `${teamName} wint`, data: rows.map((r) => r.win), backgroundColor: "#16a34a" },
+              { label: "Gelijk", data: rows.map((r) => r.draw), backgroundColor: "#a1a1aa" },
+              { label: `${teamName} verliest`, data: rows.map((r) => r.loss), backgroundColor: "#ef4444" }
+            ]
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { stacked: true, min: 0, max: 1, ticks: { callback: (v) => Math.round(v * 100) + "%" } },
+              y: { stacked: true }
+            },
+            plugins: {
+              tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${(c.parsed.x * 100).toFixed(1)}%` } }
+            }
+          }
         })
       );
     }

@@ -143,10 +143,14 @@ canvas { max-width: 100%; }
 
 /* Kansmatrix-heatmap */
 .hm-wrap { margin-top: 12px; }
-.hm-legend { display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-bottom: 4px; }
-.hm { display: inline-block; }
+.hm-body { display: flex; align-items: stretch; gap: 4px; }
+.hm-rowlabel { width: 22px; display: flex; align-items: center; justify-content: center; padding-top: 44px; }
+.hm-rowlabel span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 12px; font-weight: 700; color: #334155; white-space: nowrap; }
+.hm-cols { display: flex; flex-direction: column; }
+.hm-coltitle { align-self: flex-start; margin: 0 0 4px 26px; text-align: center; font-size: 12px; font-weight: 700; color: #334155; line-height: 1.2; }
 .hm-row { display: flex; }
-.hm-axis, .hm-head { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #64748b; }
+.hm-axis, .hm-head { width: 34px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #64748b; }
+.hm-axis { width: 26px; }
 .hm-cell { width: 34px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; border: 1px solid #fff; border-radius: 3px; }
 .hm-head { font-weight: 600; }
 
@@ -187,11 +191,18 @@ canvas { max-width: 100%; }
 
 /* Uitslagen-matrix */
 .matrix-scroll { overflow-x: auto; }
-table.matrix { min-width: 0; font-size: 12px; }
-table.matrix th.hm, table.matrix td.hm { text-align: center; padding: 5px 6px; border: 1px solid #f1f5f9; }
-table.matrix th.hm { font-size: 10px; color: #64748b; text-transform: none; }
-.hm-self { background: #f1f5f9; color: #cbd5e1; }
-.hm-empty { background: #fafafa; color: #cbd5e1; }
+table.matrix { width: max-content; min-width: 0; font-size: 12px; border-collapse: separate; border-spacing: 3px; }
+table.matrix th.hm, table.matrix td.hm { min-width: 60px; padding: 7px 10px; text-align: center; border: 1px solid #e2e8f0; border-radius: 6px; white-space: nowrap; }
+table.matrix th.hm { font-size: 11px; font-weight: 700; color: #475569; text-transform: none; background: #f1f5f9; }
+.hm-self { background: #e2e8f0; color: #94a3b8; }
+.hm-empty { background: #f8fafc; color: #cbd5e1; }
 .hm-win { background: #dcfce7; color: #166534; font-weight: 700; }
 .hm-loss { background: #fee2e2; color: #991b1b; font-weight: 700; }
 .hm-draw { background: #e4e4e7; color: #52525b; font-weight: 700; }
+
+/* Eenduidige 1X2-legenda: welk team hoort bij winst/verlies */
+.wdl-legend { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12px; margin-top: 6px; }
+.wdl-legend.small { justify-content: flex-start; gap: 4px 10px; font-size: 11px; margin-top: 5px; }
+.wdl-home { color: var(--green); font-weight: 600; }
+.wdl-away { color: var(--red); font-weight: 600; }
+.wdl-draw { color: #64748b; }

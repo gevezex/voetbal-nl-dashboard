@@ -533,7 +533,10 @@ export const TIPS: Record<string, TipContent> = {
       '<li><strong>Ons record</strong> — hoe wij het tegen hen deden.</li>' +
       '<li><strong>Zij tegen de rest</strong> — hoe die tegenstander presteert tegen alle andere teams.</li>' +
       '</ul>' +
-      '<p>Is ons record beter dan hun algemene record, dan ligt die tegenstander ons goed. Andersom kan een ploeg ons juist liggen in de weg zitten. De kans op winst uit het model wordt erbij gezet als richtlijn.</p>',
+      '<p>Is ons record beter dan hun algemene record, dan ligt die tegenstander ons goed. Andersom kan een ploeg ons juist in de weg zitten. De kans op winst uit het model wordt erbij gezet als richtlijn.</p>' +
+      '<h5>De balk per tegenstander</h5>' +
+      '<p>Elke horizontale balk hoort bij één tegenstander en telt op tot <strong>100%</strong>: het groene deel is de kans dat wij winnen, het grijze dat we gelijkspelen en het rode dat we verliezen.</p>' +
+      '<p class="tip-note">Let op: de kansen van verschillende tegenstanders staan los van elkaar. Ze tellen dus <strong>niet</strong> op tot één geheel — je speelt immers tegen één tegenstander per wedstrijd.</p>',
   },
   opponentSpider: {
     title: 'Sterkte van de tegenstander',

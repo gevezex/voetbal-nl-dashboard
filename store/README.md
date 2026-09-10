@@ -7,8 +7,14 @@ permissie-onderbouwing en de ZIP die je uploadt.
 Het uploadbare pakket maak je met:
 
 ```bash
-pnpm package        # bouwt de extensie en zet store/dist/voetbal-poule-dashboard-<versie>.zip klaar
+pnpm bump           # vraagt oude + nieuwe versie, werkt manifest.json/package.json bij en maakt de zip
+pnpm package        # of: alleen bouwen + zippen met de huidige versie
 ```
+
+`pnpm bump` is de aanbevolen route bij een update: het vraagt het oude en nieuwe
+versienummer, controleert dat de nieuwe versie hoger is, werkt
+`extension/manifest.json` + `package.json` bij, draait typecheck + build en zet
+de ZIP in `store/dist/`. Daarna hoef je alleen die ZIP nog te uploaden.
 
 ---
 
@@ -62,7 +68,7 @@ store/
 - [ ] **2-stapsverificatie** op het Google-account aan hebben staan
 - [x] ZIP geüpload, listing + privacy + distributie ingevuld
 - [x] **Ingediend ter beoordeling** — status: *Wacht op beoordeling* (met automatisch publiceren na goedkeuring)
-- [ ] Na goedkeuring: versie bumpen (`manifest.json` + `package.json`) bij elke update
+- [ ] Bij elke update: `pnpm bump` draaien (bumpt `manifest.json` + `package.json` en maakt de zip)
 
 > **Item in het dashboard:** `abcobomhkkmchncifpbchjijgacejaeg`
 > (`Voetbal Poule Dashboard`) — ingediend op 10 september 2026.
@@ -90,4 +96,15 @@ store/
 5. **Submit for review**. Review duurt doorgaans enkele dagen.
 
 > Tip: houd bij een update altijd de **zelfde extensie-ID** aan (niet opnieuw
-> als nieuw item uploaden) en verhoog `version` in `extension/manifest.json`.
+> als nieuw item uploaden). Draai `pnpm bump`, dat verhoogt `version` in
+> `extension/manifest.json` + `package.json` en maakt de nieuwe ZIP.
+
+---
+
+## Een update uitbrengen
+
+1. `pnpm bump` — vul de oude (huidige winkel)versie en de nieuwe versie in.
+2. De ZIP staat daarna in `store/dist/voetbal-poule-dashboard-<nieuwe-versie>.zip`.
+3. Chrome Web Store-dashboard → **het bestaande item** → *Nieuw pakket uploaden* → kies die ZIP.
+4. Controleer eventueel de listing/screenshots en klik op **Submit for review**.
+5. Commit `extension/manifest.json` + `package.json` (de ZIP zelf staat in `.gitignore`).

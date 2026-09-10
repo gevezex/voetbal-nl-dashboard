@@ -29,7 +29,8 @@ De header heeft **vijf views** (tabbladen):
   dumbbell, momentum (rolling/EWMA/reeksen/omslagpunt), sterkteratings, programmazwaarte, geluk &
   regressie (Pythagorean), stijl & archetype, multi-seizoens **onderlinge historie** met
   steekproefwaarschuwing, de geavanceerde voorspelling van de volgende wedstrijd en de **hefboom**,
-  naast de bestaande radar, doelsaldo-over-tijd en **vergelijking per tegenstander** met donut.
+  naast de bestaande radar, doelsaldo-over-tijd en **vergelijking per tegenstander** met een
+  gestapelde winst/gelijk/verlies-balk per tegenstander.
 
 Daarnaast:
 
@@ -60,6 +61,7 @@ Daarna in **Chrome**:
 | ----------------- | ------------------------------------------------------------------- |
 | `pnpm build:ext`  | De extensie-bundel (`extension/dashboard.js`) opnieuw genereren.    |
 | `pnpm typecheck`  | TypeScript-controle over `lib/` en `extension-src/`.                |
+| `pnpm bump`       | Interactief: versie bumpen, bouwen en de Web Store-zip klaarzetten. |
 
 ## 🧑‍🏫 Gebruiken
 
@@ -134,10 +136,14 @@ Alles wat je voor de winkel nodig hebt staat in **[`store/`](./store/README.md)*
 (teksten, iconen, privacybeleid, permissie-onderbouwing en de checklist).
 
 ```bash
+pnpm bump         # vraagt oude/nieuwe versie, werkt de versie bij, bouwt en maakt de zip
 pnpm package      # bouwt de extensie en maakt store/dist/voetbal-poule-dashboard-<versie>.zip
 pnpm release      # typecheck + package
 pnpm assets:generate   # iconen/promotiebeelden opnieuw genereren (vereist rsvg-convert)
 ```
+
+Voor een nieuwe winkelversie: `pnpm bump` → het genoemde ZIP-bestand in `store/dist/`
+uploaden op het **bestaande** item in het Chrome Web Store-dashboard.
 
 Het privacybeleid staat in `store/privacy-policy.md` en als kant-en-klare
 GitHub Pages-pagina in `docs/privacy.html`.

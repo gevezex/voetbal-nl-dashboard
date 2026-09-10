@@ -225,9 +225,30 @@ function heatmapMatrix(pr: AdvancedPrediction, homeName: string, awayName: strin
   for (let y = 0; y < size; y++) head += `<div class="hm-head">${y}</div>`;
   head += '</div>';
   return (
-    `<div class="hm-wrap"><div class="hm-legend"><span>${esc(homeName)} (rij)</span><span>${esc(awayName)} (kolom)</span></div>` +
-    `<div class="hm">${head}${rows}</div>` +
-    `<div class="muted" style="margin-top:6px">Kans per uitslag (thuisdoelpunten × uitdoelpunten). Donkerder = waarschijnlijker.</div></div>`
+    `<div class="hm-wrap"><div class="hm-body">` +
+    `<div class="hm-rowlabel"><span>${esc(homeName)}</span></div>` +
+    `<div class="hm-cols"><div class="hm-coltitle" style="width:${size * 34}px">${esc(awayName)}</div>${head}${rows}</div>` +
+    `</div>` +
+    `<div class="muted" style="margin-top:8px">Kans per uitslag: de rij is het aantal doelpunten van <b>${esc(homeName)}</b>, de kolom dat van <b>${esc(awayName)}</b>. Donkerder = waarschijnlijker.</div></div>`
+  );
+}
+
+/**
+ * Eenduidige legenda onder de 1X2-balk. Noemt expliciet welk team bij de
+ * groene (winst) en rode (verlies) kans hoort, zodat niemand hoeft te raden.
+ */
+function wdlLegend(
+  homeName: string,
+  awayName: string,
+  pr: { probHome: number; probDraw: number; probAway: number },
+  small = false
+): string {
+  return (
+    `<div class="wdl-legend${small ? ' small' : ''}">` +
+    `<span class="wdl-home">${pct(pr.probHome)} ${homeName} wint</span>` +
+    `<span class="wdl-draw">${pct(pr.probDraw)} gelijk</span>` +
+    `<span class="wdl-away">${pct(pr.probAway)} ${awayName} wint</span>` +
+    `</div>`
   );
 }
 
@@ -410,11 +431,7 @@ function overview(poule: Poule) {
             `<div style="width:${pr.probDraw * 100}%;background:#a1a1aa;height:100%"></div>` +
             `<div style="width:${pr.probAway * 100}%;background:var(--red);height:100%"></div>` +
             `</div>` +
-            `<div style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px" class="muted">` +
-            `<span style="color:${pr.probHome > pr.probAway ? 'var(--green)' : ''}">${pct(pr.probHome)} W</span>` +
-            `<span>${pct(pr.probDraw)} G</span>` +
-            `<span style="color:${pr.probAway > pr.probHome ? 'var(--red)' : ''}">${pct(pr.probAway)} V</span>` +
-            `</div>` +
+            wdlLegend(short(h), short(a), pr, true) +
             `<div style="margin-top:6px"><span class="badge ${tone}">${pr.confidence}</span></div>` +
             `</div>`
           );
@@ -559,7 +576,7 @@ function predictionBlock(pr: AdvancedPrediction, match: MatchRow, opts: { modelS
     `<div style="width:${pr.probDraw * 100}%;background:#a1a1aa"></div>` +
     `<div style="width:${pr.probAway * 100}%;background:var(--red)"></div>` +
     `</div>` +
-    `<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:5px"><span style="color:var(--green)">${pct(pr.probHome)} winst</span><span>${pct(pr.probDraw)} gelijk</span><span style="color:var(--red)">${pct(pr.probAway)} verlies</span></div>` +
+    wdlLegend(short(pr.home), short(pr.away), pr) +
     markets +
     heatmapMatrix(pr, pr.home.shortName || pr.home.name, pr.away.shortName || pr.away.name) +
     ou
@@ -808,7 +825,10 @@ function teamView(poule: Poule, team: PouleTeam) {
     `<div class="section-title">Volgende wedstrijd · voorspelling ${tip('prediction')}</div>` +
     (nextMatch ? nextPrediction + leverageHtml : `<p class="muted">Geen geplande wedstrijden meer.</p>`) +
     `<div class="section-title">Vergelijking per tegenstander ${tip('opponentComparison')}</div>` +
-    `<div class="card"><div class="chart-box" style="height:220px;max-width:380px;margin:0 auto"><canvas id="donut"></canvas></div><div style="overflow-x:auto">${compTable}</div></div>`
+    `<div class="card"><h2>Kans op winst / gelijk / verlies per tegenstander</h2>` +
+    `<div class="chart-box" style="height:${Math.max(200, rows.length * 34 + 50)}px"><canvas id="oppChart"></canvas></div>` +
+    `<div class="muted" style="margin:-4px 0 12px">Elke balk is één tegenstander en telt op tot 100%: de kans dat <b>${short(team)}</b> wint (groen), gelijk speelt (grijs) of verliest (rood). De kansen per tegenstander zijn onafhankelijk van elkaar en tellen dus <b>niet</b> op tot één geheel.</div>` +
+    `<div style="overflow-x:auto">${compTable}</div></div>`
   );
 }
 
@@ -1094,7 +1114,10 @@ function initPouleCharts(poule: Poule) {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: { y: { reverse: true, min: 0.5, max: teams.length + 0.5, ticks: { stepSize: 1 } } },
+          scales: {
+            y: { reverse: true, min: 0.5, max: teams.length + 0.5, ticks: { stepSize: 1 } },
+            x: { title: { display: true, text: 'Speelronde (R = speelronde)' } },
+          },
         },
       })
     );
@@ -1168,7 +1191,11 @@ function initTeamCharts(poule: Poule, team: PouleTeam) {
       new Chart(gd, {
         type: 'line',
         data: { labels: rounds.map((r) => 'R' + r), datasets: [{ label: team.shortName || team.name, data: vals, borderColor: '#16a34a', fill: true, backgroundColor: 'rgba(22,163,74,.12)', tension: 0.3 }] },
-        options: { responsive: true, maintainAspectRatio: false },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { x: { title: { display: true, text: 'Speelronde (R = speelronde)' } } },
+        },
       })
     );
   }
@@ -1187,7 +1214,14 @@ function initTeamCharts(poule: Poule, team: PouleTeam) {
             { label: 'EWMA-vorm', data: mom.ewmaSeries, borderColor: '#2563eb', borderDash: [6, 4], pointRadius: 0 },
           ],
         },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, suggestedMax: 3 } } },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, suggestedMax: 3 },
+            x: { title: { display: true, text: 'Duel (D = duel)' } },
+          },
+        },
       })
     );
   }
@@ -1199,7 +1233,11 @@ function initTeamCharts(poule: Poule, team: PouleTeam) {
       new Chart(gdMom, {
         type: 'line',
         data: { labels: mom.rollingGd.map((_, i) => 'D' + (i + 1)), datasets: [{ label: 'Rolling doelsaldo', data: mom.rollingGd, borderColor: '#f59e0b', tension: 0.3, pointRadius: 2 }] },
-        options: { responsive: true, maintainAspectRatio: false },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { x: { title: { display: true, text: 'Duel (D = duel)' } } },
+        },
       })
     );
   }
@@ -1225,17 +1263,39 @@ function initTeamCharts(poule: Poule, team: PouleTeam) {
     );
   }
 
-  const donut = document.getElementById('donut') as HTMLCanvasElement | null;
-  if (donut) {
+  const oppEl = document.getElementById('oppChart') as HTMLCanvasElement | null;
+  if (oppEl) {
+    const teamName = team.shortName || team.name;
     const rows = poule.teams
       .filter((t) => t.id !== team.id)
-      .map((t) => ({ name: t.shortName || t.name, value: chanceVsOpponent(team.id, t.id, teams, poule.matches).win }))
-      .sort((a, b) => b.value - a.value);
+      .map((t) => ({
+        name: t.shortName || t.name,
+        ...chanceVsOpponent(team.id, t.id, teams, poule.matches),
+      }))
+      .sort((a, b) => b.win - a.win);
     charts.push(
-      new Chart(donut, {
-        type: 'doughnut',
-        data: { labels: rows.map((r) => r.name), datasets: [{ data: rows.map((r) => r.value), backgroundColor: rows.map((_, i) => chartColor(i)) }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: (c: any) => ' ' + pct(c.parsed) } } } },
+      new Chart(oppEl, {
+        type: 'bar',
+        data: {
+          labels: rows.map((r) => r.name),
+          datasets: [
+            { label: `${teamName} wint`, data: rows.map((r) => r.win), backgroundColor: '#16a34a' },
+            { label: 'Gelijk', data: rows.map((r) => r.draw), backgroundColor: '#a1a1aa' },
+            { label: `${teamName} verliest`, data: rows.map((r) => r.loss), backgroundColor: '#ef4444' },
+          ],
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { stacked: true, min: 0, max: 1, ticks: { callback: (v: any) => Math.round(v * 100) + '%' } },
+            y: { stacked: true },
+          },
+          plugins: {
+            tooltip: { callbacks: { label: (c: any) => ` ${c.dataset.label}: ${(c.parsed.x * 100).toFixed(1)}%` } },
+          },
+        },
       })
     );
   }
