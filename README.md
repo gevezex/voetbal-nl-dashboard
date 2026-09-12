@@ -34,10 +34,9 @@ De header heeft **vijf views** (tabbladen):
 
 ## 🚀 Installeren
 
-De extensie komt beschikbaar in de [Chrome Web Store](https://chromewebstore.google.com/).
-**De directe link naar Voetbal Poule Dashboard volgt zodra de extensie beschikbaar is.**
+De extensie is beschikbaar in de [Chrome Web Store](https://chromewebstore.google.com/detail/voetbal-poule-dashboard/abcobomhkkmchncifpbchjijgacejaeg).
 
-Zodra de extensie beschikbaar is, installeer je deze als volgt:
+Installeer je dashboard als volgt:
 
 1. Open de pagina van **Voetbal Poule Dashboard** in de Chrome Web Store met Google Chrome op je computer.
 2. Klik op **Toevoegen aan Chrome**.
