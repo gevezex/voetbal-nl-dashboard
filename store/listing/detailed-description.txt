@@ -23,3 +23,8 @@ De extensie draait volledig in jouw browser. Er is geen server: je voetbal.nl-se
 LET OP
 
 De extensie leest alleen pagina's die je zelf in je browser mag bekijken. Houd je aan de gebruiksvoorwaarden van voetbal.nl. Niet officieel verbonden aan of goedgekeurd door de KNVB of voetbal.nl.
+
+WAT IS ER NIEUW
+
+• Versie 1.0.2 — de uitgebreide beschrijving op de winkelpagina is verduidelijkt met een "Wat is er nieuw"-sectie.
+• Versie 1.0.1 — de extensie is hernoemd naar "Voetbal.nl Poule Dashboard" en de beschrijving geeft nu duidelijker aan dat de poules van voetbal.nl worden gelezen.
