@@ -4,7 +4,7 @@ Vul deze velden in het tabblad **Store listing** in.
 
 | Veld | Waarde |
 | --- | --- |
-| Productnaam | `Voetbal Poule Dashboard` (komt uit `manifest.json`) |
+| Productnaam | `Voetbal.nl Poule Dashboard` (komt uit `manifest.json`) |
 | Categorie | **Nieuws en weer** (er is geen sportcategorie; **Productiviteit** is in het dashboard uitgeschakeld) |
 | Taal | **Nederlands** |
 | Homepage-URL | `https://github.com/gevezex/voetbal-nl-dashboard` |

@@ -5,7 +5,7 @@
 ## English (for the dashboard field)
 
 ```
-Voetbal Poule Dashboard turns a KNVB youth football pool (poule) on voetbal.nl
+Voetbal.nl Poule Dashboard turns a KNVB youth football pool (poule) on voetbal.nl
 that the user is already viewing into a local statistics and prediction
 dashboard for that pool.
 

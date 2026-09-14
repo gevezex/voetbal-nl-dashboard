@@ -1,4 +1,4 @@
-Voetbal Poule Dashboard maakt van elke KNVB-jeugdpoule op voetbal.nl een compleet analyse-dashboard — rechtstreeks vanuit je eigen, ingelogde browsersessie.
+Voetbal.nl Poule Dashboard maakt van elke KNVB-jeugdpoule op voetbal.nl een compleet analyse-dashboard — rechtstreeks vanuit je eigen, ingelogde browsersessie.
 
 Open een team-/poulepagina op voetbal.nl, klik op de knop "Maak poule-dashboard", kies de competitie en de extensie leest de tabs stand, programma en uitslagen (en per club de selectie). Alles wordt lokaal opgeslagen en het dashboard opent in een nieuw tabblad.
 
