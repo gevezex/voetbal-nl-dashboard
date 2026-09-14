@@ -1,8 +1,8 @@
-# Privacybeleid — Voetbal Poule Dashboard
+# Privacybeleid — Voetbal.nl Poule Dashboard
 
 _Laatst bijgewerkt: 10 september 2026_
 
-Voetbal Poule Dashboard ("de extensie") is een Chrome-extensie die van een
+Voetbal.nl Poule Dashboard ("de extensie") is een Chrome-extensie die van een
 KNVB-jeugdpoule op voetbal.nl een lokaal statistiek- en voorspellingsdashboard
 maakt.
 
@@ -66,7 +66,7 @@ Vragen over dit beleid? Open een issue op
 
 ## English summary
 
-Voetbal Poule Dashboard is a Chrome extension that turns a KNVB youth football
+Voetbal.nl Poule Dashboard is a Chrome extension that turns a KNVB youth football
 pool on voetbal.nl into a local statistics and prediction dashboard. It runs
 entirely in your browser: there is no server, and no data is transmitted. The
 extension only reads the voetbal.nl standings, fixtures, results and team

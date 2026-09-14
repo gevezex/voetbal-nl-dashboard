@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title">
-  <title id="title">Voetbal Poule Dashboard — Poule-schild</title>
+  <title id="title">Voetbal.nl Poule Dashboard — Poule-schild</title>
   <g transform="translate(30.72 0) scale(0.88 1)">
   <path d="M256 12 500 92V258C500 365 374 456 256 500 138 456 12 365 12 258V92Z" fill="#fff"/>
   <path d="M256 40 472 112V258C472 349 360 431 256 470 152 431 40 349 40 258V112Z" fill="#15803d"/>

@@ -1,4 +1,4 @@
-# <img src="store/assets/icon.svg" width="32" height="32" alt=""> Voetbal Poule Dashboard — Chrome-extensie
+# <img src="store/assets/icon.svg" width="32" height="32" alt=""> Voetbal.nl Poule Dashboard — Chrome-extensie
 
 Een **Chrome-extensie (Manifest V3)** die van elke **KNVB-jeugdpoule** op
 [voetbal.nl](https://www.voetbal.nl) een compleet analyse-dashboard maakt. De extensie leest de
@@ -38,10 +38,10 @@ De extensie is beschikbaar in de [Chrome Web Store](https://chromewebstore.googl
 
 Installeer je dashboard als volgt:
 
-1. Open de pagina van **Voetbal Poule Dashboard** in de Chrome Web Store met Google Chrome op je computer.
+1. Open de pagina van **Voetbal.nl Poule Dashboard** in de Chrome Web Store met Google Chrome op je computer.
 2. Klik op **Toevoegen aan Chrome**.
 3. Bekijk de gevraagde machtigingen en bevestig met **Extensie toevoegen**.
-4. Klik rechtsboven in Chrome op het **puzzelstukje** (Extensies) en pin **Voetbal Poule Dashboard**
+4. Klik rechtsboven in Chrome op het **puzzelstukje** (Extensies) en pin **Voetbal.nl Poule Dashboard**
    met het speldje, zodat je het icoon altijd in de werkbalk ziet.
 5. Ga naar [voetbal.nl](https://www.voetbal.nl), log in en open een team/poule-pagina.
    Klik rechtsonder op **Maak poule-dashboard** om te beginnen.

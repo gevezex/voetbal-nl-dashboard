@@ -1,6 +1,6 @@
 # Chrome Web Store — indienmap
 
-Deze map bevat alles wat je nodig hebt om **Voetbal Poule Dashboard** in de
+Deze map bevat alles wat je nodig hebt om **Voetbal.nl Poule Dashboard** in de
 Chrome Web Store te publiceren: de teksten, de beeldmerken, de privacy- en
 permissie-onderbouwing en de ZIP die je uploadt.
 
@@ -71,7 +71,7 @@ store/
 - [ ] Bij elke update: `pnpm bump` draaien (bumpt `manifest.json` + `package.json` en maakt de zip)
 
 > **Item in het dashboard:** `abcobomhkkmchncifpbchjijgacejaeg`
-> (`Voetbal Poule Dashboard`) — ingediend op 10 september 2026.
+> (`Voetbal.nl Poule Dashboard`) — ingediend op 10 september 2026.
 
 ---
 

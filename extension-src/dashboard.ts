@@ -302,7 +302,7 @@ function header(poule: Poule) {
   return (
     `<div class="card header-card" style="position:relative">` +
     (logo ? `<img class="club-logo" src="${esc(logo)}" alt="${esc(selected!.shortName)}">` : '') +
-    `<div class="brand"><img class="logo" src="icons/icon.svg" width="32" height="32" alt="">Voetbal Poule Dashboard</div>` +
+    `<div class="brand"><img class="logo" src="icons/icon.svg" width="32" height="32" alt="">Voetbal.nl Poule Dashboard</div>` +
     `<h1 style="padding-right:${logo ? '70px' : '0'}">${esc(poule.name)}</h1>` +
     `<div class="meta">${esc(poule.season)}${poule.division ? ' · ' + esc(poule.division) : ''}${poule.category ? ' · ' + esc(poule.category) : ''}${poule.day ? ' · ' + esc(poule.day) : ''}${poule.competition ? ' · ' + esc(poule.competition) : ''} · bijgewerkt ${fdate(new Date(poule.updatedAt).getTime())}</div>` +
     `<div class="nav">${nav}</div>` +
