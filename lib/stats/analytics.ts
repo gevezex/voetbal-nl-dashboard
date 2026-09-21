@@ -18,6 +18,8 @@
  *   9. Onderlinge historie (meerdere seizoenen, thuis/uit, steekproefwaarschuwing)
  *  10. Scenario en hefboom (Monte Carlo, eindstand-verdeling, hefboom per duel)
  *  11. Visualisaties gebeuren in de UI; deze module levert de data.
+ *  12. Uitslagen per fase: de teamview toont de duels van de huidige competitie
+ *      of beker plus (alleen ter weergave) die uit eerdere opgeslagen fases.
  */
 
 import {
@@ -1305,6 +1307,12 @@ export type PouleLike = {
   name?: string;
   teams: TeamRow[];
   matches: MatchRow[];
+  /** Deze velden zijn optioneel: ze worden alleen gebruikt om fases aan elkaar te knopen. */
+  id?: string;
+  ourTeamId?: string;
+  competition?: string | null;
+  competitionSlug?: string | null;
+  updatedAt?: string;
 };
 
 export type MultiSeasonH2H = {
@@ -1647,5 +1655,128 @@ export function goalsHistogram(matches: MatchRow[], maxGoals = 8): HistogramBuck
   for (let i = 0; i <= maxGoals; i++) buckets.push({ label: i === maxGoals ? `${maxGoals}+` : String(i), count: counts[i] });
   return buckets;
 }
+
+// ---------------------------------------------------------------------------
+// 12. Uitslagen per fase (uitsluitend weergave)
+//
+// De teamview toont meteen na de KPI's de uitslagen van de huidige competitie of
+// beker, en daaronder — achter een duidelijke scheidingslijn — de wedstrijden uit
+// eerdere fases van dezelfde ploeg. Die eerdere duels komen uit een ándere
+// opgeslagen poule en worden hier alleen getoond: ze tellen niet mee in de
+// statistieken, ratings of modellen van de huidige poule.
+// ---------------------------------------------------------------------------
+
+export type TeamResultRow = {
+  matchId: string;
+  kickoff: number | null;
+  round: number | null;
+  /** true als de ploeg thuis speelde. */
+  home: boolean;
+  opponentId: string;
+  opponentName: string | null;
+  goalsFor: number;
+  goalsAgainst: number;
+  result: Result;
+};
+
+/**
+ * Alle gespeelde duels van één ploeg binnen één poule, met de nieuwste wedstrijd
+ * bovenaan en de oudste onderaan. Wedstrijden zonder datum staan onderaan.
+ */
+export function teamResults(teamId: string, teams: TeamRow[], matches: MatchRow[]): TeamResultRow[] {
+  const byId = new Map(teams.map((t) => [t.id, t]));
+  return playedMatches(matches)
+    .map((m) => {
+      const p = fromTeamPerspective(m, teamId);
+      if (!p) return null;
+      const opponentId = m.homeTeamId === teamId ? m.awayTeamId : m.homeTeamId;
+      const opponent = byId.get(opponentId);
+      return {
+        matchId: m.id,
+        kickoff: m.kickoff,
+        round: m.round,
+        home: p.home,
+        opponentId,
+        opponentName: opponent ? opponent.name || opponent.shortName : null,
+        goalsFor: p.gf,
+        goalsAgainst: p.ga,
+        result: p.result,
+      };
+    })
+    .filter((r): r is TeamResultRow => r !== null)
+    .sort((a, b) => (b.kickoff ?? 0) - (a.kickoff ?? 0));
+}
+
+export type PhaseResults = {
+  /** Id van de poule waar de uitslagen vandaan komen (leeg bij legacy-records). */
+  id: string;
+  /** Competitieslug van de fase, bijvoorbeeld "beker" (leeg als die onbekend is). */
+  slug: string;
+  /** Weergavenaam van de fase, bijvoorbeeld "Beker · 2026/2027". */
+  label: string;
+  /** Moment waarop de fase is opgehaald; alleen gebruikt om te sorteren. */
+  updatedAt: string;
+  rows: TeamResultRow[];
+};
+
+/** Naam van een fase zoals die in de UI boven de uitslagen staat. */
+export function phaseLabel(poule: PouleLike): string {
+  const competition = (poule.competition || '').trim() || 'Competitie';
+  return poule.season ? `${competition} · ${poule.season}` : competition;
+}
+
+/**
+ * Uitslagen van dezelfde ploeg in de andere fases (vorige competitie- of bekerfase, of een
+ * eerder seizoen). Nieuwste fase eerst. Alleen weergave: deze duels horen niet in de
+ * statistieken, ratings of modellen van de huidige poule.
+ *
+ * Een fase telt alleen mee als de ploeg er ook echt in voorkomt — eerst op team-id, daarna op
+ * clubnaam — en als hij bij dezelfde teampagina hoort. De competitie die al bovenaan staat
+ * wordt overgeslagen, en elke fase verschijnt maar één keer (een beker die zowel opgeslagen als
+ * opgehaald is, is dezelfde fase).
+ */
+export function previousPhaseResults(team: TeamRow, current: PouleLike, poules: PouleLike[]): PhaseResults[] {
+  const key = teamKeyOf(team);
+  // Een fase is uniek per seizoen + competitie: de beker van vorig seizoen is een ándere fase
+  // dan de beker van nu, en "competitie najaar" van vorig jaar idem.
+  const faseSleutel = (poule: PouleLike) => {
+    const slug = (poule.competitionSlug || '').trim();
+    return slug ? (poule.season || '') + '|' + slug : '';
+  };
+  const huidigeSleutel = faseSleutel(current);
+  const gezien = new Set<string>();
+  const blocks: PhaseResults[] = [];
+  for (const poule of poules) {
+    if (poule === current) continue;
+    if (current.id && poule.id && poule.id === current.id) continue;
+    const sleutel = faseSleutel(poule);
+    if (sleutel && sleutel === huidigeSleutel) continue;
+    if (sleutel && gezien.has(sleutel)) continue;
+    const zelfdeTeampagina =
+      (!!current.ourTeamId && poule.ourTeamId === current.ourTeamId) ||
+      (!!poule.ourTeamId && poule.ourTeamId === team.id);
+    if (!zelfdeTeampagina) continue;
+    const found = poule.teams.find((t) => t.id === team.id) || poule.teams.find((t) => teamKeyOf(t) === key);
+    if (!found) continue;
+    const rows = teamResults(found.id, poule.teams, poule.matches);
+    if (!rows.length) continue;
+    if (sleutel) gezien.add(sleutel);
+    blocks.push({
+      id: poule.id || '',
+      slug: (poule.competitionSlug || '').trim(),
+      label: phaseLabel(poule),
+      updatedAt: poule.updatedAt || '',
+      rows,
+    });
+  }
+  return blocks.sort((a, b) => {
+    const recent = latestKickoff(b) - latestKickoff(a);
+    if (recent) return recent;
+    return (Date.parse(b.updatedAt || '') || 0) - (Date.parse(a.updatedAt || '') || 0);
+  });
+}
+
+/** Meest recente speeldag in een fase; fases zonder datum sorteren onderaan. */
+const latestKickoff = (block: PhaseResults) => block.rows.reduce((max, r) => Math.max(max, r.kickoff ?? 0), 0);
 
 export type { Standing };

@@ -14991,6 +14991,10 @@
       title: "Sterkte van de tegenstander",
       body: "<p>Dezelfde radar (aanval, verdediging, algemeen) maar dan voor de komende tegenstander, zodat je in \xE9\xE9n oogopslag ziet waar wij beter of slechter zijn.</p><p>Onderaan staan de losse cijfers: gemiddelde doelpunten voor/tegen en de aanval- en verdedigingsscore.</p>"
     },
+    teamResults: {
+      title: "Uitslagen per fase",
+      body: '<p>Alle wedstrijden die dit team heeft gespeeld, met de <strong>nieuwste uitslag bovenaan</strong> en de oudste onderaan.</p><h5>Ook eerdere fases</h5><p>Onder de scheidingslijn staan de duels uit de andere competities van dit team, bijvoorbeeld de <strong>beker</strong> of een <strong>vorige competitie</strong>. Die haalt het dashboard automatisch op bij voetbal.nl (met je eigen sessie), \xE9\xE9n keer per team. Ze tellen <strong>niet</strong> mee in de statistieken, ratings of modellen op deze pagina \u2014 ze staan er alleen zodat je de hele reeks van dit team terugziet.</p><h5>Hoe lees je een regel?</h5><ul><li><strong>Datum</strong> \u2014 de speeldag zoals voetbal.nl die toont.</li><li><strong>Ronde</strong> \u2014 de speelronde binnen die fase (R1, R2, \u2026).</li><li><strong>Wedstrijd</strong> \u2014 thuisploeg \u2013 uitploeg; het team van deze pagina staat vet.</li><li><strong>Uitslag</strong> \u2014 de score in dezelfde volgorde als de wedstrijd (thuis\u2013uit). De kleur laat zien hoe dit team het deed: groen = winst, grijs = gelijk, rood = verlies.</li></ul><p class="tip-note">Speelt een team maar in \xE9\xE9n competitie, dan blijft deze lijst leeg. Lukt het ophalen niet (geen sessie of storing), dan zie je alleen wat er al bekend is.</p>'
+    },
     rosterStaff: {
       title: "Staf",
       body: "<p>De begeleiding en trainers van dit team, zoals voetbal.nl die toont. Namen die spelers/staf zelf hebben afgeschermd, worden overgeslagen.</p>"
@@ -15044,6 +15048,114 @@
   };
   function getTip(id) {
     return TIPS[id] ?? null;
+  }
+
+  // lib/scrape.ts
+  var tekst = (el) => el ? (el.textContent || "").replace(/\s+/g, " ").trim() : "";
+  var norm = (s) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  var binnen = (root, sel) => root.querySelector(sel);
+  var maakDoc = (html) => new DOMParser().parseFromString(html, "text/html");
+  var MONTHS = {
+    januari: 0,
+    februari: 1,
+    maart: 2,
+    april: 3,
+    mei: 4,
+    juni: 5,
+    juli: 6,
+    augustus: 7,
+    september: 8,
+    oktober: 9,
+    november: 10,
+    december: 11
+  };
+  function parseNLDate(s) {
+    const mm = (s || "").match(/(\d{1,2})\s+([a-z]+)\s+(\d{4})/i);
+    if (!mm) return null;
+    const mon = MONTHS[mm[2].toLowerCase()];
+    if (mon === void 0) return null;
+    return Date.UTC(+mm[3], mon, +mm[1], 12, 0, 0);
+  }
+  function parseRound(s) {
+    const mm = (s || "").match(/(\d+)/);
+    return mm ? +mm[1] : null;
+  }
+  function parseTeams(html, ourTeamId) {
+    const doc = maakDoc(html);
+    const teams = [];
+    for (const row of Array.from(doc.querySelectorAll(".table-standingstable .row"))) {
+      const teamEl = binnen(row, ".value.team");
+      const posEl = binnen(row, ".value.position");
+      if (!teamEl || !posEl) continue;
+      const name = tekst(teamEl).replace(/\s+$/, "");
+      const pos = tekst(posEl);
+      if (!name || /^#$/i.test(pos) || /^(Team|#)$/i.test(name)) continue;
+      const href = row.getAttribute("href") || "";
+      const id = (href.match(/\/team\/([^/]+)/) || [])[1] || "t" + teams.length;
+      const shortName = name.replace(/\s+O\d+.*$/i, "").trim() || name;
+      const logoEl = binnen(row, ".value.logo img");
+      const logo = logoEl ? logoEl.getAttribute("src") || logoEl.getAttribute("data-src") || "" : "";
+      teams.push({ id, slug: id, name, shortName, club: name, ours: id === ourTeamId, logo });
+    }
+    return teams;
+  }
+  function parseTimetable(html) {
+    const doc = maakDoc(html);
+    const out = [];
+    for (const block of Array.from(doc.querySelectorAll(".table-timetable"))) {
+      const dateTxt = tekst(binnen(block, ".header .title"));
+      const roundTxt = tekst(binnen(block, ".header .subtitle"));
+      const kickoff = parseNLDate(dateTxt);
+      const round2 = parseRound(roundTxt);
+      for (const row of Array.from(block.querySelectorAll(".row"))) {
+        const home = tekst(binnen(row, ".value.home .team"));
+        const away = tekst(binnen(row, ".value.away .team"));
+        const center = tekst(binnen(row, ".value.center"));
+        if (!home || !away) continue;
+        const href = row.getAttribute("href") || "";
+        const matchId = (href.match(/\/wedstrijd\/([^/]+)/) || [])[1] || "w" + out.length;
+        const score = center.match(/^\s*(\d+)\s*[-–—]\s*(\d+)\s*$/);
+        let homeScore = null;
+        let awayScore = null;
+        let status = "scheduled";
+        if (score) {
+          homeScore = +score[1];
+          awayScore = +score[2];
+          status = "played";
+        }
+        out.push({ id: matchId, home, away, homeScore, awayScore, status, round: round2, kickoff });
+      }
+    }
+    return out;
+  }
+  function parseCompetitions(doc) {
+    const comps = [];
+    const seen = /* @__PURE__ */ new Set();
+    doc.querySelectorAll(".ScheduleResults-viewSelectTrigger").forEach((a) => {
+      const href = a.getAttribute("href") || "";
+      const label = tekst(binnen(a, "span")) || tekst(a) || a.getAttribute("title") || "";
+      const slug = (href.match(/\/(?:stand|programma|uitslagen|indeling)\/([^/]+)/) || [])[1] || "";
+      const key = slug || "__default__";
+      if (seen.has(key)) return;
+      seen.add(key);
+      comps.push({ slug, label });
+    });
+    return comps;
+  }
+  function parsePoule(files, ourTeamId) {
+    const teams = parseTeams(files.stand, ourTeamId);
+    const nameById = new Map(teams.map((t) => [norm(t.name), t.id]));
+    const matches = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (const tm of [...parseTimetable(files.programma), ...parseTimetable(files.uitslagen)]) {
+      if (seen.has(tm.id)) continue;
+      seen.add(tm.id);
+      const homeId = nameById.get(norm(tm.home));
+      const awayId = nameById.get(norm(tm.away));
+      if (!homeId || !awayId) continue;
+      matches.push({ ...tm, homeTeamId: homeId, awayTeamId: awayId });
+    }
+    return { teams, matches };
   }
 
   // lib/stats/analytics.ts
@@ -16121,6 +16233,67 @@
     for (let i = 0; i <= maxGoals; i++) buckets.push({ label: i === maxGoals ? `${maxGoals}+` : String(i), count: counts[i] });
     return buckets;
   }
+  function teamResults(teamId, teams, matches) {
+    const byId = new Map(teams.map((t) => [t.id, t]));
+    return playedMatches(matches).map((m) => {
+      const p = fromTeamPerspective(m, teamId);
+      if (!p) return null;
+      const opponentId = m.homeTeamId === teamId ? m.awayTeamId : m.homeTeamId;
+      const opponent = byId.get(opponentId);
+      return {
+        matchId: m.id,
+        kickoff: m.kickoff,
+        round: m.round,
+        home: p.home,
+        opponentId,
+        opponentName: opponent ? opponent.name || opponent.shortName : null,
+        goalsFor: p.gf,
+        goalsAgainst: p.ga,
+        result: p.result
+      };
+    }).filter((r) => r !== null).sort((a, b) => (b.kickoff ?? 0) - (a.kickoff ?? 0));
+  }
+  function phaseLabel(poule) {
+    const competition = (poule.competition || "").trim() || "Competitie";
+    return poule.season ? `${competition} \xB7 ${poule.season}` : competition;
+  }
+  function previousPhaseResults(team, current, poules) {
+    const key = teamKeyOf(team);
+    const faseSleutel = (poule) => {
+      const slug = (poule.competitionSlug || "").trim();
+      return slug ? (poule.season || "") + "|" + slug : "";
+    };
+    const huidigeSleutel = faseSleutel(current);
+    const gezien = /* @__PURE__ */ new Set();
+    const blocks = [];
+    for (const poule of poules) {
+      if (poule === current) continue;
+      if (current.id && poule.id && poule.id === current.id) continue;
+      const sleutel = faseSleutel(poule);
+      if (sleutel && sleutel === huidigeSleutel) continue;
+      if (sleutel && gezien.has(sleutel)) continue;
+      const zelfdeTeampagina = !!current.ourTeamId && poule.ourTeamId === current.ourTeamId || !!poule.ourTeamId && poule.ourTeamId === team.id;
+      if (!zelfdeTeampagina) continue;
+      const found = poule.teams.find((t) => t.id === team.id) || poule.teams.find((t) => teamKeyOf(t) === key);
+      if (!found) continue;
+      const rows = teamResults(found.id, poule.teams, poule.matches);
+      if (!rows.length) continue;
+      if (sleutel) gezien.add(sleutel);
+      blocks.push({
+        id: poule.id || "",
+        slug: (poule.competitionSlug || "").trim(),
+        label: phaseLabel(poule),
+        updatedAt: poule.updatedAt || "",
+        rows
+      });
+    }
+    return blocks.sort((a, b) => {
+      const recent = latestKickoff(b) - latestKickoff(a);
+      if (recent) return recent;
+      return (Date.parse(b.updatedAt || "") || 0) - (Date.parse(a.updatedAt || "") || 0);
+    });
+  }
+  var latestKickoff = (block) => block.rows.reduce((max, r) => Math.max(max, r.kickoff ?? 0), 0);
 
   // extension-src/dashboard.ts
   var state = {
@@ -16376,6 +16549,99 @@
     const rec = (label, r) => `<tr><td><b>${label}</b></td><td class="num">${r.played}</td><td class="num">${r.won}-${r.drawn}-${r.lost}</td><td class="num">${r.goalsFor}-${r.goalsAgainst}</td><td class="num"><b>${n2(r.ppg)}</b></td></tr>`;
     return `<table><thead><tr><th>Venue</th><th class="num">G</th><th class="num">W-G-V</th><th class="num">Doelen</th><th class="num">PPD</th></tr></thead><tbody>` + rec("Thuis", ha.home) + rec("Uit", ha.away) + `</tbody></table>`;
   }
+  function resultsTable(rows, team, poule) {
+    if (!rows.length) return '<p class="muted">Nog geen gespeelde wedstrijden in deze fase.</p>';
+    const own = `<b>${fullName(team)}</b>`;
+    const opponentCell = (r) => {
+      const inPoule = poule.teams.find((t) => t.id === r.opponentId);
+      if (inPoule) return `<a href="#" data-team-link="${esc(inPoule.id)}">${fullName(inPoule)}</a>`;
+      return r.opponentName ? esc(r.opponentName) : esc(r.opponentId);
+    };
+    return `<table><thead><tr><th>Datum</th><th>Ronde</th><th>Wedstrijd</th><th class="num">Uitslag</th></tr></thead><tbody>` + rows.map((r) => {
+      const opponent = opponentCell(r);
+      const [thuis, uit] = r.home ? [r.goalsFor, r.goalsAgainst] : [r.goalsAgainst, r.goalsFor];
+      return `<tr><td>${fdate(r.kickoff)}</td><td>${r.round ? "R" + r.round : "\u2014"}</td><td>${r.home ? own : opponent} <span class="muted">\u2013</span> ${r.home ? opponent : own}</td><td class="num"><span class="score-chips"><span class="${r.result}">${thuis}-${uit}</span></span></td></tr>`;
+    }).join("") + `</tbody></table>`;
+  }
+  function teamResultsSection(poule, team) {
+    const current = teamResults(team.id, teamsArg(poule), matchesArg(poule));
+    const cached = phaseCache.get(team.id);
+    const previous = previousPhaseResults(team, poule, [...state.allPoules, ...cached?.phases ?? []]);
+    let melding = "";
+    if (!cached || cached.state === "bezig") {
+      melding = `<p class="loading-row"><span class="spinner"></span>${esc(cached?.step || "Oude uitslagen ophalen\u2026")}</p>`;
+    } else if (cached.state === "fout") {
+      melding = '<p class="muted">De oude uitslagen konden niet worden opgehaald.</p>';
+    } else if (!previous.length) {
+      melding = '<p class="muted">Geen andere competities gevonden voor dit team.</p>';
+    }
+    return `<div id="team-results"><div class="section-title">Uitslagen ${tip("teamResults")}</div><div class="card"><h2>Huidige fase \xB7 ${esc(phaseLabel(poule))}</h2>${resultsTable(current, team, poule)}</div>` + melding + previous.map(
+      (phase) => `<div class="phase-divider"><span>Vorige fase \xB7 ${esc(phase.label)}</span></div><div class="card">${resultsTable(phase.rows, team, poule)}</div>`
+    ).join("") + `</div>`;
+  }
+  var phaseCache = /* @__PURE__ */ new Map();
+  async function haalVoetbalPagina(pad) {
+    const res = await fetch("https://www.voetbal.nl" + pad, {
+      credentials: "include",
+      headers: { Accept: "text/html" }
+    });
+    if (!res.ok) throw new Error("Ophalen mislukt (" + res.status + ")");
+    return res.text();
+  }
+  async function haalTeamFases(team, poule, meld) {
+    const basis = "/team/" + encodeURIComponent(team.id);
+    meld("Andere competities zoeken\u2026");
+    const standHtml = await haalVoetbalPagina(basis + "/stand");
+    const comps = parseCompetitions(new DOMParser().parseFromString(standHtml, "text/html")).filter(
+      (c) => c.slug && c.slug !== (poule.competitionSlug || "")
+    );
+    const fases = [];
+    for (let i = 0; i < comps.length; i++) {
+      const comp = comps[i];
+      meld(`Oude uitslagen ophalen\u2026${comps.length > 1 ? ` ${i + 1}/${comps.length}` : ""} ${comp.label || comp.slug}`);
+      const [stand, uitslagen] = await Promise.all([
+        haalVoetbalPagina(basis + "/stand/" + comp.slug),
+        haalVoetbalPagina(basis + "/uitslagen/" + comp.slug)
+      ]);
+      const { teams, matches } = parsePoule({ stand, programma: "", uitslagen }, team.id);
+      if (!matches.some((m) => m.status === "played")) continue;
+      fases.push({
+        id: "fase:" + team.id + ":" + comp.slug,
+        season: poule.season,
+        competition: comp.label || comp.slug,
+        competitionSlug: comp.slug,
+        ourTeamId: team.id,
+        teams,
+        matches
+      });
+    }
+    return fases;
+  }
+  async function loadTeamPhases(poule, team) {
+    if (phaseCache.has(team.id)) return;
+    phaseCache.set(team.id, { state: "bezig", phases: [], step: "Oude uitslagen ophalen\u2026" });
+    const meld = (step) => {
+      const status = phaseCache.get(team.id);
+      if (!status || status.state !== "bezig" || status.step === step) return;
+      phaseCache.set(team.id, { ...status, step });
+      refreshResultsSection(poule, team);
+    };
+    try {
+      phaseCache.set(team.id, { state: "klaar", phases: await haalTeamFases(team, poule, meld), step: "" });
+    } catch (e) {
+      console.warn("[poule-dashboard] vorige fase ophalen mislukt:", e);
+      phaseCache.set(team.id, { state: "fout", phases: [], step: "" });
+    }
+    refreshResultsSection(poule, team);
+  }
+  function refreshResultsSection(poule, team) {
+    const huidig = getPoule();
+    if (state.view !== "team" || state.teamId !== team.id || !huidig || huidig.id !== poule.id) return;
+    const el = document.getElementById("team-results");
+    if (!el) return;
+    el.outerHTML = teamResultsSection(poule, team);
+    attachHandlers(poule);
+  }
   function teamView(poule, team) {
     const teams = teamsArg(poule);
     const matches = matchesArg(poule);
@@ -16442,7 +16708,7 @@
       const chips = h2h.map((r) => `<span class="${r.result}">${r.teamAGoals}-${r.teamBGoals}</span>`).join("");
       return `<tr><td><a href="#" data-team-link="${esc(opp.id)}">${short(opp)}</a><div class="muted">sterkte ${Math.round(str.overall)}</div></td><td><b>${our.won}-${our.drawn}-${our.lost}</b> <span class="muted">(${our.played})</span><br>${our.goalsFor}-${our.goalsAgainst}</td><td><b>${oppVsRest.won}-${oppVsRest.drawn}-${oppVsRest.lost}</b> <span class="muted">(${oppVsRest.played})</span><br>${oppVsRest.goalsFor}-${oppVsRest.goalsAgainst}</td><td><b style="color:var(--green)">${pct(chance.win)}</b><div class="muted">G ${pct(chance.draw)} \xB7 V ${pct(chance.loss)}</div></td><td><span class="score-chips">${chips || "\u2014"}</span></td><td><span class="badge ${i.tone}">${i.text}</span></td></tr>`;
     }).join("") + `</tbody></table></div>`;
-    return `<div class="section-title">Team \xB7 ${short(team)} ${formBadges(form)} ${tip("form")}</div>` + rosterSection(poule, team.id) + basicKpi + detailKpi + margins + momentumSection + `<div class="grid two"><div class="card"><h2>Teamprofiel ${tip("teamStrength")}</h2><div class="chart-box"><canvas id="teamRadar"></canvas></div>${strengthBars(team, teams, matches)}</div><div class="card"><h2>Doelsaldo over tijd ${tip("goalDiffTimeline")}</h2><div class="chart-box"><canvas id="gdChart"></canvas></div></div></div>` + ratingsSection + thuisUit + sosSection + luckSection + styleSection + h2hSection + `<div class="section-title">Volgende wedstrijd \xB7 voorspelling ${tip("prediction")}</div>` + (nextMatch ? nextPrediction + leverageHtml : `<p class="muted">Geen geplande wedstrijden meer.</p>`) + `<div class="section-title">Vergelijking per tegenstander ${tip("opponentComparison")}</div><div class="card"><h2>Kans op winst / gelijk / verlies per tegenstander</h2><div class="chart-box" style="height:${Math.max(200, rows.length * 34 + 50)}px"><canvas id="oppChart"></canvas></div><div class="muted" style="margin:-4px 0 12px">Elke balk is \xE9\xE9n tegenstander en telt op tot 100%: de kans dat <b>${short(team)}</b> wint (groen), gelijk speelt (grijs) of verliest (rood). De kansen per tegenstander zijn onafhankelijk van elkaar en tellen dus <b>niet</b> op tot \xE9\xE9n geheel.</div><div style="overflow-x:auto">${compTable}</div></div>`;
+    return `<div class="section-title">Team \xB7 ${short(team)} ${formBadges(form)} ${tip("form")}</div>` + rosterSection(poule, team.id) + basicKpi + detailKpi + margins + teamResultsSection(poule, team) + momentumSection + `<div class="grid two"><div class="card"><h2>Teamprofiel ${tip("teamStrength")}</h2><div class="chart-box"><canvas id="teamRadar"></canvas></div>${strengthBars(team, teams, matches)}</div><div class="card"><h2>Doelsaldo over tijd ${tip("goalDiffTimeline")}</h2><div class="chart-box"><canvas id="gdChart"></canvas></div></div></div>` + ratingsSection + thuisUit + sosSection + luckSection + styleSection + h2hSection + `<div class="section-title">Volgende wedstrijd \xB7 voorspelling ${tip("prediction")}</div>` + (nextMatch ? nextPrediction + leverageHtml : `<p class="muted">Geen geplande wedstrijden meer.</p>`) + `<div class="section-title">Vergelijking per tegenstander ${tip("opponentComparison")}</div><div class="card"><h2>Kans op winst / gelijk / verlies per tegenstander</h2><div class="chart-box" style="height:${Math.max(200, rows.length * 34 + 50)}px"><canvas id="oppChart"></canvas></div><div class="muted" style="margin:-4px 0 12px">Elke balk is \xE9\xE9n tegenstander en telt op tot 100%: de kans dat <b>${short(team)}</b> wint (groen), gelijk speelt (grijs) of verliest (rood). De kansen per tegenstander zijn onafhankelijk van elkaar en tellen dus <b>niet</b> op tot \xE9\xE9n geheel.</div><div style="overflow-x:auto">${compTable}</div></div>`;
   }
   function modelsView(poule) {
     const teams = teamsArg(poule);
@@ -16978,6 +17244,7 @@
     app.innerHTML = header(poule) + body;
     attachHandlers(poule);
     initCharts(poule, team);
+    if (state.view === "team" && team) void loadTeamPhases(poule, team);
   }
   async function init() {
     const params = new URLSearchParams(location.search);

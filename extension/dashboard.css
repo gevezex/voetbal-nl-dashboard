@@ -115,6 +115,17 @@ canvas { max-width: 100%; }
 .table-scroll { overflow-x: auto; }
 .table-scroll table { min-width: 640px; }
 
+/* Voortgangsindicator terwijl de uitslagen uit andere competities worden opgehaald */
+.loading-row { display: flex; align-items: center; gap: 8px; margin: 14px 0 2px; color: #64748b; font-size: 12px; }
+.spinner { flex: 0 0 auto; width: 13px; height: 13px; border: 2px solid var(--line); border-top-color: var(--green); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
+/* Scheidingslijn met label tussen de huidige fase en een eerdere competitie-/bekerfase */
+.phase-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0 10px; }
+.phase-divider::before, .phase-divider::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line); }
+.phase-divider span { flex: 0 0 auto; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #64748b; }
+
 /* Sparkline */
 .spark { display: block; width: 120px; height: 30px; overflow: visible; }
 .mini-card .spark { width: 100%; height: 34px; }
