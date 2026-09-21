@@ -28,7 +28,12 @@ De header heeft **vijf views** (tabbladen):
   negatief-binomiaal**) en zie de volledige **kansmatrix**, 1X2, over/under, BTTS en verwachte punten.
 - **Scenario** — **Monte Carlo** van het restseizoen (kampioens-, top- en degradatiekansen), de
   positieverdeling, de puntenwaaier en de **hefboom** per resterend duel.
-- **Per team** — de volledige catalogus: uitgebreide basis-KPI's, thuis/uit + thuisvoordeel-index +
+- **Per team** — meteen na de KPI's de **uitslagenlijst**: alle gespeelde duels van dit team in deze
+  competitie of beker, nieuwste bovenaan. Daaronder, achter een duidelijke **scheidingslijn per
+  fase**, ook de wedstrijden uit de andere competities van dat team (de beker naast de competitie,
+  of de vorige fase). Die haalt het dashboard automatisch op — één keer per team — en ze zijn puur
+  ter weergave: ze tellen **niet** mee in de statistieken of modellen. Verder de
+  volledige catalogus: uitgebreide basis-KPI's, thuis/uit + thuisvoordeel-index +
   dumbbell, momentum (rolling/EWMA/reeksen/omslagpunt), sterkteratings, programmazwaarte, geluk &
   regressie (Pythagorean), stijl & archetype, multi-seizoens **onderlinge historie** met
   steekproefwaarschuwing, de geavanceerde voorspelling van de volgende wedstrijd en de **hefboom**,
@@ -116,7 +121,12 @@ Alle analyses zitten in **`lib/stats/`** (pure functies) en worden door het dash
 10. **Scenario en hefboom** — **Monte Carlo** van het restseizoen met kampioens-, top- en
     degradatiekansen, positieverdeling en puntenwaaier; en de **hefboom** per duel.
     (`simulateSeason`, `matchLeverage`)
-11. **Visualisaties** — heatmap (kansmatrix + uitslagen-matrix), bump chart, kwadrant-scatter,
+11. **Uitslagen per fase** — de pure functies achter de uitslagenlijst in de teamview: alle
+    gespeelde duels van één ploeg (nieuwste eerst) en de duels uit de andere fases van die ploeg
+    (beker, vorige competitie), inclusief het label, de sortering en het ontdubbelen van een fase
+    die zowel opgeslagen als opgehaald is. **Alleen weergave**: deze duels worden nergens anders in
+    de statistieken, ratings of modellen meegenomen. (`teamResults`, `previousPhaseResults`)
+12. **Visualisaties** — heatmap (kansmatrix + uitslagen-matrix), bump chart, kwadrant-scatter,
     radar, sparklines, bullet charts, dumbbell, waaierdiagram, histogram en small multiples.
 
 ## 📁 Projectstructuur
@@ -127,18 +137,21 @@ extension/                 # de geladen Chrome-extensie (MV3)
   content.js               #      knop + competitiemenu + poule-tabs & selectie uitlezen
   background.js, popup.*   #      service worker + popup (opgeslagen poules)
   dashboard.html/css/js    #      het dashboard (dashboard.js is de esbuild-bundel)
+  poule-scrape.js          #      scrape-parsers voor het content script (gegenereerd, zie lib/scrape.ts)
 extension-src/
   dashboard.ts             #      broncode van het extensie-dashboard (→ pnpm build:ext)
 lib/
   tips.ts                  #      infobox-teksten (eenvoudig Nederlands)
+  scrape.ts                #      pure parsers voor de HTML van voetbal.nl (content script + dashboard)
   stats/compute.ts         #      basis: stand, vorm, sterkte, eenvoudige Poisson-voorspelling
   stats/analytics.ts       #      volledige catalogus: KPI's, ratings, modellen, SOS, geluk, scenario
 scripts/
   build-extension.mjs      #      extensie bundelen (esbuild)
 ```
 
-`lib/` en `extension-src/` zijn de enige TypeScript-bronnen; `extension/dashboard.js` is een
-gegenereerd bestand dat je met `pnpm build:ext` opnieuw maakt na wijzigingen.
+`lib/` en `extension-src/` zijn de enige TypeScript-bronnen; `extension/dashboard.js` en
+`extension/poule-scrape.js` zijn **gegenereerde** bestanden die je met `pnpm build:ext` opnieuw
+maakt na wijzigingen.
 
 ## 🏪 Publiceren naar de Chrome Web Store
 
@@ -177,8 +190,20 @@ GitHub Pages-pagina in `docs/privacy.html`.
 - **Prestatie:** bij het aanmaken van een dashboard doet de extensie één netwerkverzoek per team
   (voor de selectie) — bij veel teams duurt de eerste keer iets langer. Daarna staat alles in
   `chrome.storage`.
+- **Andere competities in de teamview:** open je een team, dan haalt het dashboard één keer de
+  andere competities van dat team op bij voetbal.nl (drie verzoeken per extra competitie: het
+  competitiemenu, de stand en de uitslagen) en toont die onder een scheidingslijn. Dat gebeurt met
+  je eigen sessie, het resultaat blijft in het geheugen van het dashboardtabblad, en het komt in
+  géén enkele statistiek of model terecht. Tijdens het ophalen staat er een **voortgangsindicator**
+  ("Oude uitslagen ophalen… Beker"); is er niets te halen, dan zegt de sectie dat er geen andere
+  competities zijn. Lukt het ophalen niet (geen sessie of storing), dan blijft de lijst staan met
+  wat er al bekend is.
 - **Databron/autorisatie:** de extensie draait in jouw eigen browser en gebruikt je eigen sessie.
   Zie [SCRAPING.md](./SCRAPING.md) voor details en gebruiksvoorwaarden.
+- **Na een update van de extensie:** een voetbal.nl-tab die al openstond, is zijn verbinding met de
+  extensie kwijt (Chrome noemt dat *extension context invalidated*). De knop zegt dan
+  **"🔄 Herlaad deze pagina"** — herlaad de pagina (F5) en het werkt weer. Dat is normaal
+  Chrome-gedrag bij elke update of herlaadbeurt.
 
 ## 📈 Roadmap
 
