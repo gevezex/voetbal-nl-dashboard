@@ -129,6 +129,8 @@ const teamById = (p: Poule, id: string) => p.teams.find((t) => t.id === id)!;
 const teamsArg = (p: Poule) => p.teams;
 const matchesArg = (p: Poule) => p.matches;
 const short = (t: PouleTeam) => esc(t.shortName || t.name);
+/** Volledige teamnaam zoals op voetbal.nl, inclusief leeftijdssuffix (bijv. "Feyenoord O13-2"). */
+const fullName = (t: PouleTeam) => esc(t.name || t.shortName || '');
 
 function ours(poule: Poule): PouleTeam | null {
   return poule.teams.find((t) => t.id === poule.ourTeamId) || poule.teams[0] || null;
@@ -374,7 +376,7 @@ function overview(poule: Poule) {
     `</div>`;
 
   const table =
-    `<div class="table-scroll"><table><thead><tr><th>#</th><th>Team</th><th class="num">G</th><th class="num">W</th><th class="num">GL</th><th class="num">V</th><th class="num">DS</th><th class="num">Ptn</th><th class="num">PPD</th><th>Vorm</th><th>Punten­verloop</th></tr></thead><tbody>` +
+    `<div class="table-scroll"><table><thead><tr><th>#</th><th>Team</th><th class="num">G</th><th class="num">W</th><th class="num">GL</th><th class="num">V</th><th class="num" title="doelpunten voor">DV</th><th class="num" title="doelpunten tegen">DT</th><th class="num">DS</th><th class="num">Ptn</th><th class="num">PPD</th><th>Vorm</th><th>Punten­verloop</th></tr></thead><tbody>` +
     standings
       .map((s, i) => {
         const form = computeForm(s.team.id, matches, 5);
@@ -382,8 +384,9 @@ function overview(poule: Poule) {
         const cum = cumulativePoints(s.team.id, matches);
         return (
           `<tr><td class="num">${i + 1}</td>` +
-          `<td><a href="#" data-team-link="${esc(s.team.id)}" style="${isOurs ? 'font-weight:700' : ''}">${short(s.team)}</a></td>` +
+          `<td><a href="#" data-team-link="${esc(s.team.id)}" style="${isOurs ? 'font-weight:700' : ''}">${fullName(s.team)}</a></td>` +
           `<td class="num">${s.played}</td><td class="num">${s.won}</td><td class="num">${s.drawn}</td><td class="num">${s.lost}</td>` +
+          `<td class="num">${s.goalsFor}</td><td class="num">${s.goalsAgainst}</td>` +
           `<td class="num">${ds(s.goalDiff)}</td><td class="num"><b>${s.points}</b></td>` +
           `<td class="num">${n2(s.played ? s.points / s.played : 0)}</td>` +
           `<td>${formBadges(form)}</td>` +
@@ -508,11 +511,23 @@ function pouleView(poule: Poule) {
   // Uitslagen-matrix
   const matrix = headToHeadMatrix(teams, matches);
   const scoreBy = new Map(matrix.map((c) => [c.homeTeamId + '|' + c.awayTeamId, c.score]));
-  const matrixHead = `<tr><th class="hm"></th>${standings.map((s) => `<th class="hm">${short(s.team)}</th>`).join('')}</tr>`;
+  const matrixHead =
+    `<tr><th class="hoek"></th>` +
+    standings
+      .map((s) => {
+        const isOurs = s.team.id === poule.ourTeamId;
+        return (
+          `<th class="kolomkop${isOurs ? ' ours' : ''}">` +
+          `<div><span title="${fullName(s.team)}">${fullName(s.team)}</span></div></th>`
+        );
+      })
+      .join('') +
+    `</tr>`;
   const matrixRows = standings
-    .map(
-      (row) =>
-        `<tr><th class="hm">${short(row.team)}</th>` +
+    .map((row) => {
+      const isOurs = row.team.id === poule.ourTeamId;
+      return (
+        `<tr><th class="rijkop${isOurs ? ' ours' : ''}" title="${fullName(row.team)}">${fullName(row.team)}</th>` +
         standings
           .map((col) => {
             if (row.team.id === col.team.id) return `<td class="hm hm-self">—</td>`;
@@ -524,7 +539,8 @@ function pouleView(poule: Poule) {
           })
           .join('') +
         `</tr>`
-    )
+      );
+    })
     .join('');
 
   return (

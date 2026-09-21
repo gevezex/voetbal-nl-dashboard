@@ -31,10 +31,27 @@
     return mm ? +mm[1] : null;
   }
 
-  async function fetchHTML(path) {
-    const res = await fetch(path, { credentials: 'include', headers: { Accept: 'text/html' } });
-    if (!res.ok) throw new Error('Ophalen mislukt: ' + res.status);
-    return res.text();
+  /**
+   * Haalt een server-gerenderde tab-pagina op. Met `pogingen > 1` probeert hij het bij een
+   * tijdelijke storing (netwerkfout, 403/429 of 5xx) opnieuw met oplopende wachttijd; een
+   * pagina die echt niet bestaat (404/410) wordt niet herhaald.
+   */
+  async function fetchHTML(path, pogingen = 1) {
+    let laatsteFout = null;
+    for (let poging = 1; poging <= pogingen; poging++) {
+      if (poging > 1) await new Promise((r) => setTimeout(r, 500 * Math.pow(2, poging - 2)));
+      try {
+        const res = await fetch(path, { credentials: 'include', headers: { Accept: 'text/html' } });
+        if (res.ok) return res.text();
+        laatsteFout = new Error('Ophalen mislukt (' + res.status + ')');
+        const tijdelijk = res.status === 403 || res.status === 429 || res.status >= 500;
+        if (!tijdelijk) break;
+      } catch (e) {
+        laatsteFout = new Error('Ophalen mislukt (netwerkfout)');
+        laatsteFout.cause = e;
+      }
+    }
+    throw laatsteFout || new Error('Ophalen mislukt');
   }
 
   /** Parseer het competitie-subtitel (bijv. "Divisie 3 B NAJAAR") uit een tab-pagina. */
@@ -167,30 +184,36 @@
   }
 
   /** Bouw het poule-object op voor een gekozen competitie. */
-  async function gatherPoule(competitionSlug = '', competitionLabel = '') {
+  async function gatherPoule(competitionSlug = '', competitionLabel = '', voortgang = () => {}) {
     const suffix = competitionSlug ? '/' + competitionSlug : '';
     const base = '/team/' + OUR_TEAM_ID;
     const [standHtml, progHtml, uitHtml] = await Promise.all([
-      fetchHTML(base + '/stand' + suffix),
-      fetchHTML(base + '/programma' + suffix),
-      fetchHTML(base + '/uitslagen' + suffix),
+      fetchHTML(base + '/stand' + suffix, 3),
+      fetchHTML(base + '/programma' + suffix, 3),
+      fetchHTML(base + '/uitslagen' + suffix, 3),
     ]);
 
     const teams = parseTeams(standHtml);
     if (teams.length === 0) throw new Error('Geen poule-teams gevonden op deze pagina.');
 
-    // Selectie (spelers/staf) ophalen voor ELK team in de poule.
+    // Selectie (spelers/staf) ophalen voor ELK team in de poule — in kleine groepjes, zodat we
+    // voetbal.nl niet in één keer overwragen. Een team dat blijft hangen slaan we over.
     const rosters = {};
-    await Promise.all(
-      (teams.slice(0, 20)).map(async (t) => {
-        try {
-          const html = await fetchHTML('/team/' + t.id + '/team');
-          rosters[t.id] = parseRoster(html);
-        } catch (e) {
-          rosters[t.id] = { staff: [], players: [] };
-        }
-      })
-    );
+    const teamLijst = teams.slice(0, 20);
+    let gedaan = 0;
+    for (let i = 0; i < teamLijst.length; i += 4) {
+      await Promise.all(
+        teamLijst.slice(i, i + 4).map(async (t) => {
+          try {
+            rosters[t.id] = parseRoster(await fetchHTML('/team/' + t.id + '/team', 2));
+          } catch (e) {
+            rosters[t.id] = { staff: [], players: [] };
+          }
+          gedaan++;
+          voortgang(gedaan, teamLijst.length);
+        })
+      );
+    }
 
     const nameById = new Map(teams.map((t) => [norm(t.name), t.id]));
 
@@ -244,30 +267,116 @@
   let enabled = false;
   let settingsLoaded = false;
   let settingsRevision = 0;
+  /** Bericht naar de service worker; die kan net in slaap zijn, dus we proberen het zo nodig opnieuw. */
+  function sendMessage(message) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(message, (response) => {
+        const fout = chrome.runtime.lastError?.message || response?.error;
+        if (fout) reject(new Error(fout));
+        else resolve(response || {});
+      });
+    });
+  }
+  async function sendMessageMetPoging(message, pogingen = 2) {
+    let laatste;
+    for (let i = 0; i < pogingen; i++) {
+      if (i) await new Promise((r) => setTimeout(r, 400 * Math.pow(2, i - 1)));
+      try {
+        return await sendMessage(message);
+      } catch (e) {
+        laatste = e;
+      }
+    }
+    throw laatste;
+  }
+
+  /** Terugvalpad: zelf in chrome.storage schrijven, ook als de service worker niet antwoordt. */
+  async function savePouleDirect(poule) {
+    if (typeof PouleStorage === 'undefined') throw new Error('Opslaan mislukt');
+    const data = await new Promise((resolve) => chrome.storage.local.get(['poules', 'pouleAliases'], (d) => resolve(d || {})));
+    const result = PouleStorage.merge(data, poule);
+    await new Promise((resolve, reject) => {
+      chrome.storage.local.set({ poules: result.poules, pouleAliases: result.pouleAliases }, () => {
+        const fout = chrome.runtime.lastError?.message;
+        if (fout) reject(new Error(fout));
+        else resolve();
+      });
+    });
+    return result;
+  }
+
+  /**
+   * Slaat de poule op. Normaal doet de service worker dat (met zijn schrijfrij), maar die kan
+   * net in slaap zijn en dan klapt het bericht eruit ("The message port closed…"). Daarom
+   * proberen we het daar eerst en schrijven we het anders zelf weg — de merge is idempotent.
+   */
+  async function savePoule(poule) {
+    try {
+      const viaWorker = await sendMessageMetPoging({ type: 'save-poule', poule }, 2);
+      if (viaWorker.pouleId) return viaWorker;
+    } catch (e) {
+      console.warn('[poule-dashboard] opslaan via de service worker mislukte, nu direct:', e);
+    }
+    return savePouleDirect(poule);
+  }
+
+  /**
+   * Opent het dashboard. Eén poging: elke poging opent namelijk een tabblad. Het antwoord van de
+   * service worker komt soms niet aan ("The message port closed…") terwijl het tabblad wél opent —
+   * dat is hier dus geen fout.
+   */
+  async function openDashboard(pouleId) {
+    try {
+      await sendMessageMetPoging({ type: 'open-dashboard', pouleId }, 1);
+      return true;
+    } catch (e) {
+      if (/message port closed/i.test(String((e && e.message) || ''))) return true;
+      console.warn('[poule-dashboard] dashboard openen mislukte:', e);
+      return false;
+    }
+  }
+
   async function startGather(slug, label) {
     if (!enabled) return;
     const revision = settingsRevision;
     const old = button.textContent;
-    button.textContent = '⏳ Poule ophalen…';
-    button.disabled = true;
-    try {
-      const poule = await gatherPoule(slug, label);
-      if (!enabled || revision !== settingsRevision) return;
-      const saved = await new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({ type: 'save-poule', poule }, (response) => {
-          const error = chrome.runtime.lastError?.message || response?.error;
-          if (error || !response?.pouleId) reject(new Error(error || 'Opslaan mislukt'));
-          else resolve(response);
-        });
-      });
-      if (!enabled || revision !== settingsRevision) return;
-      chrome.runtime.sendMessage({ type: 'open-dashboard', pouleId: saved.pouleId });
+    const herstel = () => {
       button.textContent = old;
       button.disabled = false;
+      if (button.removeAttribute) button.removeAttribute('title');
+    };
+    const actief = () => enabled && revision === settingsRevision;
+    const meld = (tekst, detail, wachttijd) => {
+      button.textContent = tekst;
+      if (detail) button.title = detail;
+      setTimeout(() => {
+        if (revision === settingsRevision) herstel();
+      }, wachttijd);
+    };
+    button.textContent = '⏳ Poule ophalen…';
+    if (button.removeAttribute) button.removeAttribute('title');
+    button.disabled = true;
+    try {
+      const poule = await gatherPoule(slug, label, (gedaan, totaal) => {
+        button.textContent = '⏳ Teams inlezen… ' + gedaan + '/' + totaal;
+      });
+      if (!actief()) return herstel();
+      const saved = await savePoule(poule);
+      if (!saved.pouleId) throw new Error('Opslaan mislukt');
+      if (!actief()) return herstel();
+      const geopend = await openDashboard(saved.pouleId);
+      if (!actief()) return herstel();
+      if (!geopend) {
+        meld('⚠️ Opgeslagen · open via het extensie-icoon', 'De poule is opgeslagen, maar het dashboard openen mislukte.', 8000);
+        return;
+      }
+      herstel();
     } catch (e) {
-      if (!enabled || revision !== settingsRevision) return;
-      button.textContent = '❌ ' + (e && e.message ? e.message : 'Er ging iets mis');
-      setTimeout(() => { if (revision === settingsRevision) { button.textContent = old; button.disabled = false; } }, 3500);
+      if (!actief()) return herstel();
+      const melding = e && e.message ? e.message : 'Er ging iets mis';
+      console.warn('[poule-dashboard] poule ophalen mislukt:', e, e && e.cause ? e.cause : '');
+      const kort = melding.length > 70 ? melding.slice(0, 67) + '…' : melding;
+      meld('❌ ' + kort + ' · probeer opnieuw', melding, 6000);
     }
   }
 

@@ -13,12 +13,15 @@ geen Chrome DevTools Protocol nodig. Je Cloudflare-clearance en KNVB-login werke
 
 De header heeft **vijf views** (tabbladen):
 
-- **Overzicht** — poulekop, kern-KPI's, de stand met **sparklines** van het puntenverloop,
-  **small multiples** van alle teams, gemiddelde doelpunten per wedstrijd en de komende
-  speelronde met kans op winst/gelijk/verlies.
+- **Overzicht** — poulekop, kern-KPI's, de stand met de **volledige teamnaam** (net als op
+  voetbal.nl, inclusief leeftijdssuffix zoals *Feyenoord O13-2*), de **doelpunten voor (DV) en
+  tegen (DT)** als totaal, **sparklines** van het puntenverloop, **small multiples** van alle
+  teams, gemiddelde doelpunten per wedstrijd en de komende speelronde met kans op
+  winst/gelijk/verlies.
 - **Poule-analyse** — **bump chart** (positieverloop per speelronde), **kwadrant-scatter**
   aanval × verdediging, **archetype-clustering**, doelpunten-**histogram** en de
-  **uitslagen-matrix** van alle onderlinge duels.
+  **uitslagen-matrix** van alle onderlinge duels, met **schuine teamnamen** boven de kolommen
+  (zoals op voetbal.nl) zodat de matrix zonder scrollen past.
 - **Modellen** — alle sterkeratings naast elkaar: **Elo, Massey, Colley, Bradley-Terry en Pi**,
   plus de **aanval-/verdedigingscoëfficiënten** totaal en apart thuis/uit.
 - **Voorspelling** — kies een wedstrijd en een model (**Poisson, Dixon-Coles, bivariaat,

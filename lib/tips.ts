@@ -21,12 +21,14 @@ export const TIPS: Record<string, TipContent> = {
       '<h5>Hoe lees je de kolommen?</h5>' +
       '<ul>' +
       '<li><strong>G</strong> = gespeeld, <strong>W</strong> = gewonnen, <strong>GL</strong> = gelijk, <strong>V</strong> = verloren.</li>' +
+      '<li><strong>DV</strong> = doelpunten voor en <strong>DT</strong> = doelpunten tegen, beide als <strong>totaal</strong> over alle gespeelde duels.</li>' +
       '<li><strong>DS</strong> = doelsaldo (gemaakte min tegendoelpunten).</li>' +
       '<li><strong>Ptn</strong> = punten: 3 per overwinning, 1 per gelijkspel.</li>' +
       '<li><strong>PPD</strong> = punten per duel; handig om teams met een verschillend aantal wedstrijden eerlijk te vergelijken.</li>' +
       '<li><strong>Vorm</strong> = de laatste 5 resultaten (W/G/V), het meest recente rechts.</li>' +
       '</ul>' +
-      '<p class="tip-note">Klik op een team voor het volledige profiel met alle analyses.</p>',
+      '<p class="tip-note">Klik op een team voor het volledige profiel met alle analyses.</p>' +
+      '<p class="tip-note">De teamnaam staat er net als op voetbal.nl, inclusief leeftijdssuffix (bijv. <strong>Feyenoord O13-2</strong>), zodat je meteen ziet om welk team van de club het gaat.</p>',
   },
   ppg: {
     title: 'Punten per duel (PPD)',
@@ -605,7 +607,7 @@ export const TIPS: Record<string, TipContent> = {
       '<li><strong>Grijs</strong> — gelijkspel.</li>' +
       '<li><strong>Streepje</strong> — nog niet gespeeld.</li>' +
       '</ul>' +
-      '<p>Zo vind je razendsnel alle uitslagen van één team terug.</p>',
+      '<p>Zo vind je razendsnel alle uitslagen van één team terug. De teamnamen boven de kolommen staan schuin, net als op voetbal.nl — zo past de hele matrix zonder scrollen in het scherm.</p>',
   },
 
   // -------------------------------------------------------------------------

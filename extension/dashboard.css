@@ -189,11 +189,29 @@ canvas { max-width: 100%; }
 .seg-btn { border: none; background: none; padding: 6px 10px; border-radius: 7px; font-size: 12px; font-weight: 600; color: #475569; cursor: pointer; }
 .seg-btn.active { background: #fff; color: var(--green); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
-/* Uitslagen-matrix */
+/* Uitslagen-matrix — kolomkoppen schuin naar rechtsboven, zoals op voetbal.nl */
 .matrix-scroll { overflow-x: auto; }
 table.matrix { width: max-content; min-width: 0; font-size: 12px; border-collapse: separate; border-spacing: 3px; }
-table.matrix th.hm, table.matrix td.hm { min-width: 60px; padding: 7px 10px; text-align: center; border: 1px solid #e2e8f0; border-radius: 6px; white-space: nowrap; }
-table.matrix th.hm { font-size: 11px; font-weight: 700; color: #475569; text-transform: none; background: #f1f5f9; }
+table.matrix td.hm { min-width: 40px; padding: 7px 6px; text-align: center; border: 1px solid #e2e8f0; border-radius: 6px; white-space: nowrap; }
+/* rijlabel links */
+table.matrix th.rijkop { min-width: 140px; padding: 7px 10px; text-align: left; white-space: nowrap; font-size: 11px; font-weight: 700; text-transform: none; color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; }
+/* lege hoekcel */
+table.matrix th.hoek { border: 0; background: none; padding: 0; }
+/* schuine kolomkop: de EERSTE letter staat op vaste hoogte boven het midden van de eigen kolom;
+   vanaf die letter loopt de naam schuin naar rechtsboven. Het leiderstreepje komt van de rij
+   eronder (het tabelvlak) omhoog en eindigt precies bij die eerste letter. */
+table.matrix th.kolomkop { position: relative; width: 40px; min-width: 40px; height: 168px; padding: 0; border: 0; background: none; }
+table.matrix th.kolomkop > div { position: absolute; bottom: 30px; left: 50%; margin-left: -3px; display: flex; width: 190px; transform-origin: left bottom; transform: rotate(-50deg); }
+table.matrix th.kolomkop > div > span { display: inline-block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 700; text-transform: none; color: #475569; }
+/* leiderstreepje: komt verticaal omhoog, maakt vlak onder de naam een knik en loopt in
+   dezelfde hoek (-50°) als de teamnaam door tot het begin van de tekst. Het puntje komt uit
+   op het MIDDEN van de teksthoogte (niet op de onderkant/baseline), daarom is de hele
+   elleboog een stukje opgeschoven in de richting loodrecht op de tekst. */
+table.matrix th.kolomkop::after { content: ""; position: absolute; left: calc(50% - 12.5px); bottom: 0; width: 1px; height: 25px; background: #cbd5e1; }
+table.matrix th.kolomkop::before { content: ""; position: absolute; left: calc(50% - 12.5px); bottom: 24.4px; width: 8px; height: 1px; background: #cbd5e1; transform-origin: left center; transform: rotate(-50deg); }
+/* het eigen team ook in de matrix laten opvallen */
+table.matrix th.rijkop.ours { color: #0f172a; background: #e2e8f0; }
+table.matrix th.kolomkop.ours > div > span { color: #0f172a; font-weight: 800; }
 .hm-self { background: #e2e8f0; color: #94a3b8; }
 .hm-empty { background: #f8fafc; color: #cbd5e1; }
 .hm-win { background: #dcfce7; color: #166534; font-weight: 700; }
