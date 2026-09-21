@@ -14734,7 +14734,7 @@
     // -------------------------------------------------------------------------
     stand: {
       title: "De stand",
-      body: '<p>De ranglijst op <strong>punten</strong>, daarna <strong>doelsaldo</strong> en daarna <strong>doelpunten voor</strong>.</p><h5>Hoe lees je de kolommen?</h5><ul><li><strong>G</strong> = gespeeld, <strong>W</strong> = gewonnen, <strong>GL</strong> = gelijk, <strong>V</strong> = verloren.</li><li><strong>DS</strong> = doelsaldo (gemaakte min tegendoelpunten).</li><li><strong>Ptn</strong> = punten: 3 per overwinning, 1 per gelijkspel.</li><li><strong>PPD</strong> = punten per duel; handig om teams met een verschillend aantal wedstrijden eerlijk te vergelijken.</li><li><strong>Vorm</strong> = de laatste 5 resultaten (W/G/V), het meest recente rechts.</li></ul><p class="tip-note">Klik op een team voor het volledige profiel met alle analyses.</p>'
+      body: '<p>De ranglijst op <strong>punten</strong>, daarna <strong>doelsaldo</strong> en daarna <strong>doelpunten voor</strong>.</p><h5>Hoe lees je de kolommen?</h5><ul><li><strong>G</strong> = gespeeld, <strong>W</strong> = gewonnen, <strong>GL</strong> = gelijk, <strong>V</strong> = verloren.</li><li><strong>DV</strong> = doelpunten voor en <strong>DT</strong> = doelpunten tegen, beide als <strong>totaal</strong> over alle gespeelde duels.</li><li><strong>DS</strong> = doelsaldo (gemaakte min tegendoelpunten).</li><li><strong>Ptn</strong> = punten: 3 per overwinning, 1 per gelijkspel.</li><li><strong>PPD</strong> = punten per duel; handig om teams met een verschillend aantal wedstrijden eerlijk te vergelijken.</li><li><strong>Vorm</strong> = de laatste 5 resultaten (W/G/V), het meest recente rechts.</li></ul><p class="tip-note">Klik op een team voor het volledige profiel met alle analyses.</p><p class="tip-note">De teamnaam staat er net als op voetbal.nl, inclusief leeftijdssuffix (bijv. <strong>Feyenoord O13-2</strong>), zodat je meteen ziet om welk team van de club het gaat.</p>'
     },
     ppg: {
       title: "Punten per duel (PPD)",
@@ -15020,7 +15020,7 @@
     },
     resultsMatrix: {
       title: "Onderlinge uitslagen (matrix)",
-      body: "<p>Alle gespeelde duels in \xE9\xE9n tabel. De <strong>rij</strong> is de thuisploeg, de <strong>kolom</strong> de uitploeg.</p><h5>Kleuren</h5><ul><li><strong>Groen</strong> \u2014 de thuisploeg won.</li><li><strong>Rood</strong> \u2014 de uitploeg won.</li><li><strong>Grijs</strong> \u2014 gelijkspel.</li><li><strong>Streepje</strong> \u2014 nog niet gespeeld.</li></ul><p>Zo vind je razendsnel alle uitslagen van \xE9\xE9n team terug.</p>"
+      body: "<p>Alle gespeelde duels in \xE9\xE9n tabel. De <strong>rij</strong> is de thuisploeg, de <strong>kolom</strong> de uitploeg.</p><h5>Kleuren</h5><ul><li><strong>Groen</strong> \u2014 de thuisploeg won.</li><li><strong>Rood</strong> \u2014 de uitploeg won.</li><li><strong>Grijs</strong> \u2014 gelijkspel.</li><li><strong>Streepje</strong> \u2014 nog niet gespeeld.</li></ul><p>Zo vind je razendsnel alle uitslagen van \xE9\xE9n team terug. De teamnamen boven de kolommen staan schuin, net als op voetbal.nl \u2014 zo past de hele matrix zonder scrollen in het scherm.</p>"
     },
     // -------------------------------------------------------------------------
     // Scenario / simulatie
@@ -16168,6 +16168,7 @@
   var teamsArg = (p) => p.teams;
   var matchesArg = (p) => p.matches;
   var short = (t) => esc(t.shortName || t.name);
+  var fullName = (t) => esc(t.name || t.shortName || "");
   function ours(poule) {
     return poule.teams.find((t) => t.id === poule.ourTeamId) || poule.teams[0] || null;
   }
@@ -16293,11 +16294,11 @@
     const bestAtk = [...aggs].sort((a, b) => b.s.attack - a.s.attack)[0];
     const bestDef = [...aggs].sort((a, b) => b.s.defense - a.s.defense)[0];
     const kpi = `<div class="grid kpi">` + kpiCard("Teams", String(teams.length), "in de poule") + kpiCard("Gespeeld", String(played.length), `${matches.filter((m) => m.status === "scheduled").length} nog te spelen`) + kpiCard("Gem. doelpunten", n1(avgGoals), "per wedstrijd") + kpiCard("Sterkste aanval", bestAtk ? String(Math.round(bestAtk.s.attack)) : "\u2014", bestAtk ? short(bestAtk.team) : "") + kpiCard("Beste verdediging", bestDef ? String(Math.round(bestDef.s.defense)) : "\u2014", bestDef ? short(bestDef.team) : "") + `</div>`;
-    const table = `<div class="table-scroll"><table><thead><tr><th>#</th><th>Team</th><th class="num">G</th><th class="num">W</th><th class="num">GL</th><th class="num">V</th><th class="num">DS</th><th class="num">Ptn</th><th class="num">PPD</th><th>Vorm</th><th>Punten\xADverloop</th></tr></thead><tbody>` + standings.map((s, i) => {
+    const table = `<div class="table-scroll"><table><thead><tr><th>#</th><th>Team</th><th class="num">G</th><th class="num">W</th><th class="num">GL</th><th class="num">V</th><th class="num" title="doelpunten voor">DV</th><th class="num" title="doelpunten tegen">DT</th><th class="num">DS</th><th class="num">Ptn</th><th class="num">PPD</th><th>Vorm</th><th>Punten\xADverloop</th></tr></thead><tbody>` + standings.map((s, i) => {
       const form = computeForm(s.team.id, matches, 5);
       const isOurs = s.team.id === poule.ourTeamId;
       const cum = cumulativePoints(s.team.id, matches);
-      return `<tr><td class="num">${i + 1}</td><td><a href="#" data-team-link="${esc(s.team.id)}" style="${isOurs ? "font-weight:700" : ""}">${short(s.team)}</a></td><td class="num">${s.played}</td><td class="num">${s.won}</td><td class="num">${s.drawn}</td><td class="num">${s.lost}</td><td class="num">${ds(s.goalDiff)}</td><td class="num"><b>${s.points}</b></td><td class="num">${n2(s.played ? s.points / s.played : 0)}</td><td>${formBadges(form)}</td><td>${sparkline(cum)}</td></tr>`;
+      return `<tr><td class="num">${i + 1}</td><td><a href="#" data-team-link="${esc(s.team.id)}" style="${isOurs ? "font-weight:700" : ""}">${fullName(s.team)}</a></td><td class="num">${s.played}</td><td class="num">${s.won}</td><td class="num">${s.drawn}</td><td class="num">${s.lost}</td><td class="num">${s.goalsFor}</td><td class="num">${s.goalsAgainst}</td><td class="num">${ds(s.goalDiff)}</td><td class="num"><b>${s.points}</b></td><td class="num">${n2(s.played ? s.points / s.played : 0)}</td><td>${formBadges(form)}</td><td>${sparkline(cum)}</td></tr>`;
     }).join("") + `</tbody></table></div>`;
     const smallMultiples = `<div class="grid small">` + standings.map((s) => {
       const k = computeTeamKpis(s.team.id, matches);
@@ -16344,17 +16345,21 @@
     }).join("") + `</tbody></table></div>`;
     const matrix = headToHeadMatrix(teams, matches);
     const scoreBy = new Map(matrix.map((c) => [c.homeTeamId + "|" + c.awayTeamId, c.score]));
-    const matrixHead = `<tr><th class="hm"></th>${standings.map((s) => `<th class="hm">${short(s.team)}</th>`).join("")}</tr>`;
-    const matrixRows = standings.map(
-      (row) => `<tr><th class="hm">${short(row.team)}</th>` + standings.map((col) => {
+    const matrixHead = `<tr><th class="hoek"></th>` + standings.map((s) => {
+      const isOurs = s.team.id === poule.ourTeamId;
+      return `<th class="kolomkop${isOurs ? " ours" : ""}"><div><span title="${fullName(s.team)}">${fullName(s.team)}</span></div></th>`;
+    }).join("") + `</tr>`;
+    const matrixRows = standings.map((row) => {
+      const isOurs = row.team.id === poule.ourTeamId;
+      return `<tr><th class="rijkop${isOurs ? " ours" : ""}" title="${fullName(row.team)}">${fullName(row.team)}</th>` + standings.map((col) => {
         if (row.team.id === col.team.id) return `<td class="hm hm-self">\u2014</td>`;
         const sc = scoreBy.get(row.team.id + "|" + col.team.id);
         if (!sc) return `<td class="hm hm-empty">\xB7</td>`;
         const [h, a] = sc.split("-").map(Number);
         const cls = h > a ? "hm-win" : h < a ? "hm-loss" : "hm-draw";
         return `<td class="hm ${cls}">${sc}</td>`;
-      }).join("") + `</tr>`
-    ).join("");
+      }).join("") + `</tr>`;
+    }).join("");
     return kpi + `<div class="section-title">Positieverloop per speelronde ${tip("bumpChart")}</div><div class="card"><div class="chart-box tall"><canvas id="bumpChart"></canvas></div>${bumpLegend}</div><div class="grid two"><div class="card"><h2>Kwadrant: aanval \xD7 verdediging ${tip("quadrant")}</h2><div class="chart-box"><canvas id="quadChart"></canvas></div></div><div class="card"><h2>Doelpuntenverdeling ${tip("histogram")}</h2><div class="chart-box"><canvas id="histChart"></canvas></div></div></div><div class="section-title">Archetypen &amp; stijl ${tip("archetypes")}</div><div class="card">${archTable}</div><div class="section-title">Onderlinge uitslagen ${tip("resultsMatrix")}</div><div class="card"><div class="matrix-scroll"><table class="matrix"><thead>${matrixHead}</thead><tbody>${matrixRows}</tbody></table></div></div><div style="display:none" id="quadData">${JSON.stringify(quadData)}</div><div style="display:none" id="bumpData">${JSON.stringify(pbr)}</div><div style="display:none" id="histData">${JSON.stringify(goalsHistogram(matches))}</div>`;
   }
   function predictionBlock(pr, match, opts = {}) {
