@@ -27,7 +27,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.voetbal.nl/team/*"],
-      "js": ["content.js"],
+      "js": ["poule-storage.js", "content.js"],
       "run_at": "document_idle"
     }
   ]

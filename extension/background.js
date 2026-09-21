@@ -36,15 +36,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .then(sendResponse, (error) => sendResponse({ error: error.message }));
     return true;
   }
-  if (msg.type === 'open-dashboard') {
-    const q = msg.pouleId ? '?poule=' + encodeURIComponent(msg.pouleId) : '';
-    chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') + q });
-  }
-  if (msg.type === 'open-dashboard-team') {
+  if (msg.type === 'open-dashboard' || msg.type === 'open-dashboard-team') {
     const q =
-      '?poule=' + encodeURIComponent(msg.pouleId) +
-      '&team=' + encodeURIComponent(msg.teamId);
-    chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') + q });
+      msg.type === 'open-dashboard-team'
+        ? '?poule=' + encodeURIComponent(msg.pouleId) + '&team=' + encodeURIComponent(msg.teamId)
+        : msg.pouleId
+          ? '?poule=' + encodeURIComponent(msg.pouleId)
+          : '';
+    // Altijd antwoorden: zonder sendResponse sluit het kanaal en ziet de afzender
+    // "The message port closed before a response was received".
+    chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') + q }, (tab) => {
+      const fout = chrome.runtime.lastError?.message;
+      if (fout) sendResponse({ error: fout });
+      else sendResponse({ ok: true, tabId: tab && tab.id });
+    });
+    return true;
   }
   return false;
 });
