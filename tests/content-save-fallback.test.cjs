@@ -93,7 +93,6 @@ function setup() {
     },
   };
 
-  vm.runInNewContext(readFileSync('extension/poule-storage.js', 'utf8'), {});
   const context = {
     document,
     location: { pathname: '/team/a' },
@@ -114,6 +113,7 @@ function setup() {
     console,
   };
   vm.runInNewContext(readFileSync('extension/poule-storage.js', 'utf8'), context);
+  vm.runInNewContext(readFileSync('extension/poule-scrape.js', 'utf8'), context);
   vm.runInNewContext(readFileSync('extension/content.js', 'utf8'), context);
 
   return {

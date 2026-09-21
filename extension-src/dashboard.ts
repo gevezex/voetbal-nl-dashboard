@@ -14,6 +14,7 @@ import {
   type MatchRow,
 } from '../lib/stats/compute';
 import { getTip } from '../lib/tips';
+import { parseCompetitions, parsePoule } from '../lib/scrape';
 import {
   computeTeamKpis,
   homeAwayAnalysis,
@@ -31,6 +32,10 @@ import {
   positionByRound,
   headToHeadMatrix,
   goalsHistogram,
+  teamResults,
+  previousPhaseResults,
+  phaseLabel,
+  type TeamResultRow,
   type ModelKind,
   type ScenarioResult,
   type AdvancedPrediction,
@@ -610,6 +615,178 @@ function homeAwayTable(ha: ReturnType<typeof homeAwayAnalysis>): string {
   );
 }
 
+/**
+ * Eén rij per gespeelde wedstrijd, nieuwste bovenaan. De uitslag staat in
+ * thuis–uit-volgorde (net als de wedstrijd zelf) en is gekleurd vanuit dit team:
+ * groen = winst, grijs = gelijk, rood = verlies. Tegenstanders die ook in de
+ * huidige poule zitten, blijven aanklikbaar.
+ */
+function resultsTable(rows: TeamResultRow[], team: PouleTeam, poule: Poule): string {
+  if (!rows.length) return '<p class="muted">Nog geen gespeelde wedstrijden in deze fase.</p>';
+  const own = `<b>${fullName(team)}</b>`;
+  const opponentCell = (r: TeamResultRow) => {
+    const inPoule = poule.teams.find((t) => t.id === r.opponentId);
+    if (inPoule) return `<a href="#" data-team-link="${esc(inPoule.id)}">${fullName(inPoule)}</a>`;
+    return r.opponentName ? esc(r.opponentName) : esc(r.opponentId);
+  };
+  return (
+    `<table><thead><tr><th>Datum</th><th>Ronde</th><th>Wedstrijd</th><th class="num">Uitslag</th></tr></thead><tbody>` +
+    rows
+      .map((r) => {
+        const opponent = opponentCell(r);
+        const [thuis, uit] = r.home ? [r.goalsFor, r.goalsAgainst] : [r.goalsAgainst, r.goalsFor];
+        return (
+          `<tr><td>${fdate(r.kickoff)}</td>` +
+          `<td>${r.round ? 'R' + r.round : '—'}</td>` +
+          `<td>${r.home ? own : opponent} <span class="muted">–</span> ${r.home ? opponent : own}</td>` +
+          `<td class="num"><span class="score-chips"><span class="${r.result}">${thuis}-${uit}</span></span></td></tr>`
+        );
+      })
+      .join('') +
+    `</tbody></table>`
+  );
+}
+
+/**
+ * Uitslagen van dit team: eerst de huidige competitie/beker, daaronder — na een
+ * duidelijke scheidingslijn per fase — de duels uit eerdere fases (beker, vorige competitie).
+ * Die eerdere duels zijn puur ter weergave en tellen niet mee in de statistieken.
+ */
+function teamResultsSection(poule: Poule, team: PouleTeam): string {
+  const current = teamResults(team.id, teamsArg(poule), matchesArg(poule));
+  const cached = phaseCache.get(team.id);
+  const previous = previousPhaseResults(team, poule, [...state.allPoules, ...(cached?.phases ?? [])]);
+  // Voortgangsindicator: laat zien dat (en wat) er opgehaald wordt; en als er niets te halen
+  // valt, zeg dat dan ook — anders lijkt de sectie gewoon leeg.
+  let melding = '';
+  if (!cached || cached.state === 'bezig') {
+    melding = `<p class="loading-row"><span class="spinner"></span>${esc(cached?.step || 'Oude uitslagen ophalen…')}</p>`;
+  } else if (cached.state === 'fout') {
+    melding = '<p class="muted">De oude uitslagen konden niet worden opgehaald.</p>';
+  } else if (!previous.length) {
+    melding = '<p class="muted">Geen andere competities gevonden voor dit team.</p>';
+  }
+  return (
+    `<div id="team-results">` +
+    `<div class="section-title">Uitslagen ${tip('teamResults')}</div>` +
+    `<div class="card"><h2>Huidige fase · ${esc(phaseLabel(poule))}</h2>${resultsTable(current, team, poule)}</div>` +
+    melding +
+    previous
+      .map(
+        (phase) =>
+          `<div class="phase-divider"><span>Vorige fase · ${esc(phase.label)}</span></div>` +
+          `<div class="card">${resultsTable(phase.rows, team, poule)}</div>`
+      )
+      .join('') +
+    `</div>`
+  );
+}
+
+/**
+ * Een fase die het dashboard zelf bij voetbal.nl ophaalt (beker, vorige competitie).
+ * Zelfde vorm als een opgeslagen poule, zodat de uitslagenlijst één code pad houdt.
+ */
+type FetchedPhase = {
+  id: string;
+  season: string;
+  competition: string;
+  competitionSlug: string;
+  ourTeamId: string;
+  teams: PouleTeam[];
+  matches: PouleMatch[];
+};
+
+/**
+ * Opgehaalde fases per team, met de stand van zaken van het ophalen. `step` is de tekst die
+ * tijdens het ophalen op de plek van de uitslagen staat (zoals de knop op voetbal.nl dat doet).
+ */
+const phaseCache = new Map<string, { state: 'bezig' | 'klaar' | 'fout'; phases: FetchedPhase[]; step: string }>();
+
+/** Haalt één pagina van voetbal.nl op met de eigen, ingelogde sessie (host-permissie). */
+async function haalVoetbalPagina(pad: string): Promise<string> {
+  const res = await fetch('https://www.voetbal.nl' + pad, {
+    credentials: 'include',
+    headers: { Accept: 'text/html' },
+  });
+  if (!res.ok) throw new Error('Ophalen mislukt (' + res.status + ')');
+  return res.text();
+}
+
+/**
+ * Haalt de andere competities van dit team op (beker, vorige fase). Eén verzoek voor de
+ * stand-pagina — daarin staat het competitiemenu — plus twee per extra competitie: de stand van
+ * díe competitie (nodig om teamnamen aan id's te koppelen; in de beker spelen andere
+ * tegenstanders dan in de competitie) en de uitslagen. De huidige competitie slaan we over:
+ * die staat al bovenaan de uitslagenlijst.
+ */
+async function haalTeamFases(
+  team: PouleTeam,
+  poule: Poule,
+  meld: (step: string) => void
+): Promise<FetchedPhase[]> {
+  const basis = '/team/' + encodeURIComponent(team.id);
+  meld('Andere competities zoeken…');
+  const standHtml = await haalVoetbalPagina(basis + '/stand');
+  const comps = parseCompetitions(new DOMParser().parseFromString(standHtml, 'text/html')).filter(
+    (c) => c.slug && c.slug !== (poule.competitionSlug || '')
+  );
+  const fases: FetchedPhase[] = [];
+  for (let i = 0; i < comps.length; i++) {
+    const comp = comps[i];
+    // "Oude uitslagen ophalen… Beker" — met een teller zodra er meer dan één fase is.
+    meld(`Oude uitslagen ophalen…${comps.length > 1 ? ` ${i + 1}/${comps.length}` : ''} ${comp.label || comp.slug}`);
+    const [stand, uitslagen] = await Promise.all([
+      haalVoetbalPagina(basis + '/stand/' + comp.slug),
+      haalVoetbalPagina(basis + '/uitslagen/' + comp.slug),
+    ]);
+    const { teams, matches } = parsePoule({ stand, programma: '', uitslagen }, team.id);
+    if (!matches.some((m) => m.status === 'played')) continue;
+    fases.push({
+      id: 'fase:' + team.id + ':' + comp.slug,
+      season: poule.season,
+      competition: comp.label || comp.slug,
+      competitionSlug: comp.slug,
+      ourTeamId: team.id,
+      teams,
+      matches,
+    });
+  }
+  return fases;
+}
+
+/**
+ * Haalt de andere fases van dit team één keer per dashboardsessie op en werkt daarna alleen
+ * de uitslagenlijst bij. Mislukt het ophalen (geen sessie, storing), dan blijft de lijst staan
+ * met wat er al bekend is — de rest van het dashboard merkt daar niets van.
+ */
+async function loadTeamPhases(poule: Poule, team: PouleTeam) {
+  if (phaseCache.has(team.id)) return;
+  phaseCache.set(team.id, { state: 'bezig', phases: [], step: 'Oude uitslagen ophalen…' });
+  const meld = (step: string) => {
+    const status = phaseCache.get(team.id);
+    if (!status || status.state !== 'bezig' || status.step === step) return;
+    phaseCache.set(team.id, { ...status, step });
+    refreshResultsSection(poule, team);
+  };
+  try {
+    phaseCache.set(team.id, { state: 'klaar', phases: await haalTeamFases(team, poule, meld), step: '' });
+  } catch (e) {
+    console.warn('[poule-dashboard] vorige fase ophalen mislukt:', e);
+    phaseCache.set(team.id, { state: 'fout', phases: [], step: '' });
+  }
+  refreshResultsSection(poule, team);
+}
+
+/** Alleen de uitslagen-sectie verversen; een volledige render zou de grafieken opnieuw animeren. */
+function refreshResultsSection(poule: Poule, team: PouleTeam) {
+  const huidig = getPoule();
+  if (state.view !== 'team' || state.teamId !== team.id || !huidig || huidig.id !== poule.id) return;
+  const el = document.getElementById('team-results');
+  if (!el) return;
+  el.outerHTML = teamResultsSection(poule, team);
+  attachHandlers(poule);
+}
+
 function teamView(poule: Poule, team: PouleTeam) {
   const teams = teamsArg(poule);
   const matches = matchesArg(poule);
@@ -827,6 +1004,7 @@ function teamView(poule: Poule, team: PouleTeam) {
     basicKpi +
     detailKpi +
     margins +
+    teamResultsSection(poule, team) +
     momentumSection +
     `<div class="grid two">` +
     `<div class="card"><h2>Teamprofiel ${tip('teamStrength')}</h2><div class="chart-box"><canvas id="teamRadar"></canvas></div>${strengthBars(team, teams, matches)}</div>` +
@@ -1519,6 +1697,8 @@ function render() {
   app.innerHTML = header(poule) + body;
   attachHandlers(poule);
   initCharts(poule, team);
+  // De uitslagen uit andere competities (beker, vorige fase) komen er asynchroon achteraan.
+  if (state.view === 'team' && team) void loadTeamPhases(poule, team);
 }
 
 async function init() {

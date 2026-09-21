@@ -22,7 +22,7 @@ function setup(visible = false, enabled = true) {
     createElement: () => ({ style: {}, children: [], contains(node) { return this === node || this.children.includes(node); }, focus() { this.focused = true; }, appendChild(child) { this.children.push(child); }, remove() { nodes.delete(this.id); } }),
     body: { appendChild(node) { nodes.set(node.id, node); }, contains(node) { return nodes.get(node.id) === node; } },
   };
-  vm.runInNewContext(readFileSync('extension/content.js', 'utf8'), {
+  const context = {
     document, location: { pathname: '/team/a' },
     chrome: { runtime: {}, storage: {
       local: { get(key, callback) { callback({ dashboardEnabled: enabled }); } },
@@ -32,7 +32,10 @@ function setup(visible = false, enabled = true) {
     DOMParser: class { parseFromString() { return { querySelectorAll: () => options }; } },
     fetch() { requests++; return new Promise(resolve => { resolveFetch = resolve; }); },
     setTimeout() {},
-  });
+  };
+  // Het content script leunt op de gegenereerde parsers (net als in de echte extensie).
+  vm.runInNewContext(readFileSync('extension/poule-scrape.js', 'utf8'), context);
+  vm.runInNewContext(readFileSync('extension/content.js', 'utf8'), context);
   return {
     nodes, get button() { return nodes.get('vnd-poule-btn'); }, setEnabled(value) { onStorageChange({ dashboardEnabled: { newValue: value } }, 'local'); }, count: () => requests,
     emit(type, event) { for (const fn of listeners.get(type) || []) fn(event); },

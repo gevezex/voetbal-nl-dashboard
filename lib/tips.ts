@@ -546,6 +546,21 @@ export const TIPS: Record<string, TipContent> = {
       '<p>Dezelfde radar (aanval, verdediging, algemeen) maar dan voor de komende tegenstander, zodat je in één oogopslag ziet waar wij beter of slechter zijn.</p>' +
       '<p>Onderaan staan de losse cijfers: gemiddelde doelpunten voor/tegen en de aanval- en verdedigingsscore.</p>',
   },
+  teamResults: {
+    title: 'Uitslagen per fase',
+    body:
+      '<p>Alle wedstrijden die dit team heeft gespeeld, met de <strong>nieuwste uitslag bovenaan</strong> en de oudste onderaan.</p>' +
+      '<h5>Ook eerdere fases</h5>' +
+      '<p>Onder de scheidingslijn staan de duels uit de andere competities van dit team, bijvoorbeeld de <strong>beker</strong> of een <strong>vorige competitie</strong>. Die haalt het dashboard automatisch op bij voetbal.nl (met je eigen sessie), één keer per team. Ze tellen <strong>niet</strong> mee in de statistieken, ratings of modellen op deze pagina — ze staan er alleen zodat je de hele reeks van dit team terugziet.</p>' +
+      '<h5>Hoe lees je een regel?</h5>' +
+      '<ul>' +
+      '<li><strong>Datum</strong> — de speeldag zoals voetbal.nl die toont.</li>' +
+      '<li><strong>Ronde</strong> — de speelronde binnen die fase (R1, R2, …).</li>' +
+      '<li><strong>Wedstrijd</strong> — thuisploeg – uitploeg; het team van deze pagina staat vet.</li>' +
+      '<li><strong>Uitslag</strong> — de score in dezelfde volgorde als de wedstrijd (thuis–uit). De kleur laat zien hoe dit team het deed: groen = winst, grijs = gelijk, rood = verlies.</li>' +
+      '</ul>' +
+      '<p class="tip-note">Speelt een team maar in één competitie, dan blijft deze lijst leeg. Lukt het ophalen niet (geen sessie of storing), dan zie je alleen wat er al bekend is.</p>',
+  },
   rosterStaff: {
     title: 'Staf',
     body:

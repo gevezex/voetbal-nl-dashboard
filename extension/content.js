@@ -9,27 +9,9 @@
   if (!m) return;
   const OUR_TEAM_ID = m[1];
 
-  const $ = (sel, root) => (root || document).querySelector(sel);
-  const text = (el) => (el ? (el.textContent || '').replace(/\s+/g, ' ').trim() : '');
-  const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ').trim();
-  const isNum = (v) => v != null && v !== '' && !isNaN(parseInt(String(v), 10));
-
-  const MONTHS = {
-    januari: 0, februari: 1, maart: 2, april: 3, mei: 4, juni: 5,
-    juli: 6, augustus: 7, september: 8, oktober: 9, november: 10, december: 11,
-  };
-  function parseNLDate(s) {
-    // "Zaterdag 12 september 2026"
-    const mm = (s || '').match(/(\d{1,2})\s+([a-z]+)\s+(\d{4})/i);
-    if (!mm) return null;
-    const mon = MONTHS[mm[2].toLowerCase()];
-    if (mon === undefined) return null;
-    return new Date(Date.UTC(+mm[3], mon, +mm[1], 12, 0, 0));
-  }
-  function parseRound(s) {
-    const mm = (s || '').match(/(\d+)/);
-    return mm ? +mm[1] : null;
-  }
+  // De scrape-parsers staan in lib/scrape.ts en komen hier binnen als de globale
+  // `PouleScrape` (gegenereerd door `pnpm build:ext`, zie het manifest).
+  const { parseCompetitions, parseDivision, parsePoule, parseRoster } = PouleScrape;
 
   /**
    * Haalt een server-gerenderde tab-pagina op. Met `pogingen > 1` probeert hij het bij een
@@ -54,115 +36,11 @@
     throw laatsteFout || new Error('Ophalen mislukt');
   }
 
-  /** Parseer het competitie-subtitel (bijv. "Divisie 3 B NAJAAR") uit een tab-pagina. */
-  function parseDivision(html) {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const els = doc.querySelectorAll('h3, .subtitle, .title');
-    for (const el of els) {
-      const t = text(el);
-      const m = t.match(/Onder\s*\d+[^]*?\-\s*(.+)$/i);
-      if (m && m[1].trim()) return m[1].trim();
-    }
-    return null;
-  }
-
-  /** Parseer de selectie (spelers + staf) uit de Team-tab, zonder afgeschermde namen. */
-  function parseRoster(html) {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const staff = [];
-    const players = [];
-    doc.querySelectorAll('.Playerlist').forEach((group) => {
-      const title = text(group.querySelector('.Playerlist-groupTitle')) || '';
-      const isStaff = /staf/i.test(title);
-      const isPlayers = /spelers/i.test(title);
-      if (!isStaff && !isPlayers) return;
-      group.querySelectorAll('.Playerlist-group .Playerlist-item').forEach((item) => {
-        const first = text(item.querySelector('.Playercopy-firstname'));
-        const last = text(item.querySelector('.Playercopy-lastname'));
-        const name = (first + ' ' + last).trim();
-        if (!name || /afgescherm/i.test(name)) return; // afgeschermde namen overslaan
-        const img = item.querySelector('.Avatar-image');
-        const src = img ? (img.getAttribute('src') || img.getAttribute('data-src') || '') : '';
-        let photo = null;
-        if (src && !/fallback|members/i.test(src)) photo = 'https://www.voetbal.nl' + src;
-        (isStaff ? staff : players).push({ name, photo });
-      });
-    });
-    return { staff, players };
-  }
-
-  /** Parseer de stand-tabel -> lijst van teams in de poule. */
-  function parseTeams(html) {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const teams = [];
-    const rows = doc.querySelectorAll('.table-standingstable .row');
-    for (const row of rows) {
-      const teamEl = row.querySelector('.value.team');
-      const posEl = row.querySelector('.value.position');
-      if (!teamEl || !posEl) continue;
-      const name = text(teamEl).replace(/\s+$/, '');
-      const pos = text(posEl).replace(/\s+/g, ' ').trim();
-      if (!name || /^#$/i.test(pos) || /^(Team|\#)$/i.test(name)) continue;
-      const href = row.getAttribute('href') || '';
-      const id = (href.match(/\/team\/([^/]+)/) || [])[1] || 't' + teams.length;
-      const slug = id;
-      const shortName = name.replace(/\s+O\d+.*$/i, '').trim() || name;
-      const logoEl = row.querySelector('.value.logo img');
-      const logo = logoEl ? (logoEl.getAttribute('src') || logoEl.getAttribute('data-src') || '') : '';
-      teams.push({ id, slug, name, shortName, club: name, ours: id === OUR_TEAM_ID, logo });
-    }
-    return teams;
-  }
-
-  /** Parseer een (programma/uitslagen) tabblad -> lijst van wedstrijden. */
-  function parseTimetable(html) {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const out = [];
-    const blocks = doc.querySelectorAll('.table-timetable');
-    for (const block of blocks) {
-      const dateTxt = text($('.header .title', block));
-      const roundTxt = text($('.header .subtitle', block));
-      const kickoff = parseNLDate(dateTxt);
-      const round = parseRound(roundTxt);
-      const rows = block.querySelectorAll('.row');
-      for (const row of rows) {
-        const home = text($('.value.home .team', row));
-        const away = text($('.value.away .team', row));
-        const center = text($('.value.center', row));
-        const href = row.getAttribute('href') || '';
-        const matchId = (href.match(/\/wedstrijd\/([^/]+)/) || [])[1] || 'w' + out.length;
-        if (!home || !away) continue;
-        const score = center.match(/^\s*(\d+)\s*[-–—]\s*(\d+)\s*$/);
-        let homeScore = null, awayScore = null, status = 'scheduled';
-        if (score) { homeScore = +score[1]; awayScore = +score[2]; status = 'played'; }
-        out.push({ id: matchId, home, away, homeScore, awayScore, status, round, kickoff: kickoff ? kickoff.getTime() : null });
-      }
-    }
-    return out;
-  }
-
-  /** Detecteer de competities (bijv. "Beker", "Competitie najaar") waarin het team speelt. */
-  function parseCompetitions(doc) {
-    const root = doc || document;
-    const comps = [];
-    const seen = new Set();
-    root.querySelectorAll('.ScheduleResults-viewSelectTrigger').forEach((a) => {
-      const href = a.getAttribute('href') || '';
-      const label = text(a.querySelector('span')) || text(a) || a.getAttribute('title') || '';
-      const slug = (href.match(/\/(?:stand|programma|uitslagen|indeling)\/([^/]+)/) || [])[1] || '';
-      const key = slug || '__default__';
-      if (seen.has(key)) return;
-      seen.add(key);
-      comps.push({ slug, label });
-    });
-    return comps;
-  }
-
   // Cache only for this page lifetime; reloading picks up competition changes.
   let cachedCompetitions = null;
   let competitionsRequest = null;
   async function loadCompetitions() {
-    const visible = parseCompetitions();
+    const visible = parseCompetitions(document);
     if (visible.length) {
       cachedCompetitions = visible;
       return visible;
@@ -193,7 +71,7 @@
       fetchHTML(base + '/uitslagen' + suffix, 3),
     ]);
 
-    const teams = parseTeams(standHtml);
+    const { teams, matches } = parsePoule({ stand: standHtml, programma: progHtml, uitslagen: uitHtml }, OUR_TEAM_ID);
     if (teams.length === 0) throw new Error('Geen poule-teams gevonden op deze pagina.');
 
     // Selectie (spelers/staf) ophalen voor ELK team in de poule — in kleine groepjes, zodat we
@@ -213,20 +91,6 @@
           voortgang(gedaan, teamLijst.length);
         })
       );
-    }
-
-    const nameById = new Map(teams.map((t) => [norm(t.name), t.id]));
-
-    // Alle wedstrijden (programma = komend, uitslagen = gespeeld), dedupe op id.
-    const matches = [];
-    const seen = new Set();
-    for (const tm of [...parseTimetable(progHtml), ...parseTimetable(uitHtml)]) {
-      if (seen.has(tm.id)) continue;
-      seen.add(tm.id);
-      const homeId = nameById.get(norm(tm.home));
-      const awayId = nameById.get(norm(tm.away));
-      if (!homeId || !awayId) continue;
-      matches.push({ ...tm, homeTeamId: homeId, awayTeamId: awayId });
     }
 
     const competition = competitionLabel || 'Competitie';
@@ -267,13 +131,51 @@
   let enabled = false;
   let settingsLoaded = false;
   let settingsRevision = 0;
+
+  const CONTEXT_FOUT = /extension context invalidated/i;
+  const HERLAAD_TEKST = '🔄 Herlaad deze pagina';
+  const HERLAAD_DETAIL =
+    'De extensie is bijgewerkt of opnieuw geladen. Herlaad deze voetbal.nl-pagina (F5) en klik daarna weer op de knop.';
+  let contextDood = false;
+
+  /**
+   * Is de extensie-API in dit tabblad nog bruikbaar? Zodra de extensie wordt bijgewerkt of opnieuw
+   * geladen, raakt een al geopend content script zijn context kwijt: `chrome.*` gooit dan
+   * "Extension context invalidated" (of `chrome.runtime` verdwijnt helemaal). Opnieuw proberen helpt
+   * dan niet — alleen de pagina herladen.
+   *
+   * Een verlopen context gooit die fout synchroon, dus doen we één goedkope proefaanroep. Zo weten
+   * we het vóórdat we een hele poule — inclusief alle selecties — binnenhalen.
+   */
+  function contextWeg() {
+    if (contextDood) return true;
+    try {
+      if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.storage) return true;
+      chrome.storage.local.get(null, () => {});
+      return false;
+    } catch (e) {
+      contextDood = true;
+      return true;
+    }
+  }
+
+  /** Blijvende melding op de knop: geen "probeer opnieuw", maar de pagina herladen. */
+  function meldContextWeg() {
+    if (!button) return;
+    button.textContent = HERLAAD_TEKST;
+    button.title = HERLAAD_DETAIL;
+    button.disabled = false;
+  }
+
   /** Bericht naar de service worker; die kan net in slaap zijn, dus we proberen het zo nodig opnieuw. */
   function sendMessage(message) {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(message, (response) => {
         const fout = chrome.runtime.lastError?.message || response?.error;
-        if (fout) reject(new Error(fout));
-        else resolve(response || {});
+        if (fout) {
+          if (CONTEXT_FOUT.test(fout)) contextDood = true;
+          reject(new Error(fout));
+        } else resolve(response || {});
       });
     });
   }
@@ -338,6 +240,9 @@
 
   async function startGather(slug, label) {
     if (!enabled) return;
+    // Eerst kijken of de extensie-context nog leeft: anders zouden we de hele poule inlezen
+    // (inclusief alle selecties) om pas bij het opslaan te ontdekken dat het niet kan.
+    if (contextWeg()) return meldContextWeg();
     const revision = settingsRevision;
     const old = button.textContent;
     const herstel = () => {
@@ -375,6 +280,8 @@
       if (!actief()) return herstel();
       const melding = e && e.message ? e.message : 'Er ging iets mis';
       console.warn('[poule-dashboard] poule ophalen mislukt:', e, e && e.cause ? e.cause : '');
+      // De extensie kan tijdens het inlezen zijn bijgewerkt: dan is dit tabblad zijn context kwijt.
+      if (contextWeg() || CONTEXT_FOUT.test(melding)) return meldContextWeg();
       const kort = melding.length > 70 ? melding.slice(0, 67) + '…' : melding;
       meld('❌ ' + kort + ' · probeer opnieuw', melding, 6000);
     }
@@ -432,6 +339,8 @@
       if (!enabled || button.disabled) return;
       const revision = settingsRevision;
       if (closeCompetitionMenu) { closeCompetitionMenu(); return; }
+      // Een menu openen heeft geen zin als de extensie-context intussen weg is.
+      if (contextWeg()) return meldContextWeg();
       button.disabled = true;
       button.textContent = '⏳ Competities laden…';
       let comps;

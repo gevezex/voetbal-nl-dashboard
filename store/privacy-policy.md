@@ -23,6 +23,11 @@ sessie** de volgende pagina's die je zelf mag bekijken:
 - de tab **uitslagen** (gespeelde wedstrijden met eindstand),
 - en per club de **team**-tab (selectie: staf en spelers, met namen en foto's).
 
+Open je in het dashboard een team, dan leest de extensie met diezelfde sessie ook
+de **stand** en **uitslagen** van de andere competities van dat team (bijvoorbeeld
+de beker), zodat je alle gespeelde duels van dat team op één plek ziet. Die
+wedstrijden worden alleen getoond en tellen niet mee in de statistieken.
+
 Deze gegevens worden omgezet in statistieken en opgeslagen in
 `chrome.storage.local` van je browser, zodat je het dashboard later opnieuw kunt
 openen zonder de pagina's opnieuw op te halen.

@@ -7,7 +7,7 @@ browsersessie; alle data blijft lokaal in `chrome.storage`.
 ## Setup en commando's
 
 - Dependencies: `pnpm install`
-- Extensiebundel bouwen: `pnpm build:ext` (esbuild: `extension-src/dashboard.ts` + `lib/` → `extension/dashboard.js`)
+- Extensiebundel bouwen: `pnpm build:ext` (esbuild: `extension-src/dashboard.ts` + `lib/` → `extension/dashboard.js`, en `lib/scrape.ts` → `extension/poule-scrape.js` als globale `PouleScrape` voor het content script)
 - Typecheck: `pnpm typecheck`
 - Tests: `node tests/<naam>.test.cjs` (er is géén test-script in `package.json`)
 - Alle tests: `for f in tests/*.test.cjs; do node "$f"; done`
@@ -18,7 +18,7 @@ browsersessie; alle data blijft lokaal in `chrome.storage`.
 
 - `extension/` — de geladen extensie (`manifest.json`, `content.js`, `background.js`, `popup.*`, `dashboard.*`, `poule-storage.js`)
 - `extension-src/dashboard.ts` — bron van het dashboard (het enige TypeScript-bestand van de UI)
-- `lib/stats/` — pure statistiek (`compute.ts`, `analytics.ts`); `lib/tips.ts` — infoboxteksten
+- `lib/stats/` — pure statistiek (`compute.ts`, `analytics.ts`); `lib/tips.ts` — infoboxteksten; `lib/scrape.ts` — pure HTML-parsers van voetbal.nl (gedeeld door content script en dashboard)
 - `scripts/` — build-, package- en release-hulpjes
 - `tests/` — tests met `node:test`
 - `store/` — Chrome Web Store-materiaal; `store/dist/` (gitignored) bevat de zip; `docs/` — GitHub Pages (privacybeleid)
@@ -31,8 +31,11 @@ browsersessie; alle data blijft lokaal in `chrome.storage`.
   commits werken en met `--no-ff` terugmergen naar `main`, zoals in de bestaande historie.
 - Committen en pushen alleen wanneer de gebruiker dat vraagt.
 - Draai vóór elke commit `pnpm typecheck` én de tests; beide moeten groen zijn.
-- `extension/dashboard.js` is een **gegenereerd** bestand: na elke wijziging in `extension-src/`
-  of `lib/` opnieuw `pnpm build:ext` draaien en de bundel meecommitten.
+- `extension/dashboard.js` en `extension/poule-scrape.js` zijn **gegenereerde** bestanden: na elke
+  wijziging in `extension-src/` of `lib/` opnieuw `pnpm build:ext` draaien en de bundels meecommitten.
+- De HTML van voetbal.nl wordt op één plek geparseerd (`lib/scrape.ts`): het content script krijgt
+  die parsers via `extension/poule-scrape.js`, het dashboard importeert ze rechtstreeks. Voeg daar
+  geen tweede kopie van toe.
 - Versiebeleid: één versie per release; bumpen met `pnpm bump` in plaats van losse edits.
 
 ## Codestijl

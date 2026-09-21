@@ -16,4 +16,20 @@ await build({
   define: { 'process.env.NODE_ENV': '"production"' },
 });
 
-console.log('✅ extension/dashboard.js gegenereerd');
+// Het content script is bewust plain JS (geen bundel), maar moet wel dezelfde
+// scrape-parsers gebruiken als het dashboard. Daarom bundelen we lib/scrape.ts hier
+// naar een globale `PouleScrape` die content.js via het manifest binnenkrijgt.
+await build({
+  entryPoints: ['lib/scrape.ts'],
+  bundle: true,
+  outfile: 'extension/poule-scrape.js',
+  format: 'iife',
+  globalName: 'PouleScrape',
+  platform: 'browser',
+  target: 'es2020',
+  minify: false,
+  sourcemap: false,
+  logLevel: 'info',
+});
+
+console.log('✅ extension/dashboard.js en extension/poule-scrape.js gegenereerd');
