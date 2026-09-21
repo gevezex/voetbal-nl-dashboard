@@ -131,13 +131,51 @@
   let enabled = false;
   let settingsLoaded = false;
   let settingsRevision = 0;
+
+  const CONTEXT_FOUT = /extension context invalidated/i;
+  const HERLAAD_TEKST = '🔄 Herlaad deze pagina';
+  const HERLAAD_DETAIL =
+    'De extensie is bijgewerkt of opnieuw geladen. Herlaad deze voetbal.nl-pagina (F5) en klik daarna weer op de knop.';
+  let contextDood = false;
+
+  /**
+   * Is de extensie-API in dit tabblad nog bruikbaar? Zodra de extensie wordt bijgewerkt of opnieuw
+   * geladen, raakt een al geopend content script zijn context kwijt: `chrome.*` gooit dan
+   * "Extension context invalidated" (of `chrome.runtime` verdwijnt helemaal). Opnieuw proberen helpt
+   * dan niet — alleen de pagina herladen.
+   *
+   * Een verlopen context gooit die fout synchroon, dus doen we één goedkope proefaanroep. Zo weten
+   * we het vóórdat we een hele poule — inclusief alle selecties — binnenhalen.
+   */
+  function contextWeg() {
+    if (contextDood) return true;
+    try {
+      if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.storage) return true;
+      chrome.storage.local.get(null, () => {});
+      return false;
+    } catch (e) {
+      contextDood = true;
+      return true;
+    }
+  }
+
+  /** Blijvende melding op de knop: geen "probeer opnieuw", maar de pagina herladen. */
+  function meldContextWeg() {
+    if (!button) return;
+    button.textContent = HERLAAD_TEKST;
+    button.title = HERLAAD_DETAIL;
+    button.disabled = false;
+  }
+
   /** Bericht naar de service worker; die kan net in slaap zijn, dus we proberen het zo nodig opnieuw. */
   function sendMessage(message) {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(message, (response) => {
         const fout = chrome.runtime.lastError?.message || response?.error;
-        if (fout) reject(new Error(fout));
-        else resolve(response || {});
+        if (fout) {
+          if (CONTEXT_FOUT.test(fout)) contextDood = true;
+          reject(new Error(fout));
+        } else resolve(response || {});
       });
     });
   }
@@ -202,6 +240,9 @@
 
   async function startGather(slug, label) {
     if (!enabled) return;
+    // Eerst kijken of de extensie-context nog leeft: anders zouden we de hele poule inlezen
+    // (inclusief alle selecties) om pas bij het opslaan te ontdekken dat het niet kan.
+    if (contextWeg()) return meldContextWeg();
     const revision = settingsRevision;
     const old = button.textContent;
     const herstel = () => {
@@ -239,6 +280,8 @@
       if (!actief()) return herstel();
       const melding = e && e.message ? e.message : 'Er ging iets mis';
       console.warn('[poule-dashboard] poule ophalen mislukt:', e, e && e.cause ? e.cause : '');
+      // De extensie kan tijdens het inlezen zijn bijgewerkt: dan is dit tabblad zijn context kwijt.
+      if (contextWeg() || CONTEXT_FOUT.test(melding)) return meldContextWeg();
       const kort = melding.length > 70 ? melding.slice(0, 67) + '…' : melding;
       meld('❌ ' + kort + ' · probeer opnieuw', melding, 6000);
     }
@@ -296,6 +339,8 @@
       if (!enabled || button.disabled) return;
       const revision = settingsRevision;
       if (closeCompetitionMenu) { closeCompetitionMenu(); return; }
+      // Een menu openen heeft geen zin als de extensie-context intussen weg is.
+      if (contextWeg()) return meldContextWeg();
       button.disabled = true;
       button.textContent = '⏳ Competities laden…';
       let comps;
